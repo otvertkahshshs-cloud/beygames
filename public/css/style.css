@@ -427,3 +427,18 @@ a:hover { color: #fff; }
 .attach-label:hover { border-color: var(--accent); color: #fff; }
 .attach-input { display: none; }
 .attach-hint { font-size: 11px; color: var(--text-muted); }
+
+/* Все эмодзи чёрно-белые */
+.cat-icon, .sec-icon, .th-icon, .sb-title,
+.astat, .attach-icon, .gs-hero p,
+.category-header .cat-icon,
+.section-row .sec-icon,
+.thread-row .th-icon,
+.sidebar-block .sb-title,
+.admin-stats .astat,
+.page-title,
+.reply-box h3,
+.attach-header,
+.post-attachment .attach-icon {
+    filter: grayscale(100%) brightness(2);
+}
