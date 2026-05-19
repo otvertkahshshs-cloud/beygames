@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head><meta charset="UTF-8"><title><%= profile.username %> — GameForum</title><link rel="stylesheet" href="/css/style.css"></head>
+<body>
+<%- include('../partials/header') %>
+<div class="container main-wrap">
+  <div class="profile-wrap">
+    <div class="profile-card">
+      <img src="<%= profile.avatar %>" class="profile-avatar" onerror="this.src='/img/default_avatar.png'">
+      <div class="profile-info">
+        <h2 class="profile-name"><%= profile.username %></h2>
+        <div class="profile-rank"><%= profile.rank %></div>
+        <div class="profile-stats">
+          <div class="pstat"><span>Постов</span><b><%= profile.postsCount %></b></div>
+          <div class="pstat"><span>Репутация</span><b><%= profile.reputation %></b></div>
+          <div class="pstat"><span>На форуме с</span><b><%= new Date(profile.createdAt).toLocaleDateString('ru') %></b></div>
+        </div>
+        <% if (profile.signature) { %><div class="profile-sig"><%= profile.signature %></div><% } %>
+        <% if (user && user.username === profile.username) { %>
+          <a href="/user/settings/edit" class="btn-primary" style="margin-top:12px">⚙ Настройки</a>
+        <% } %>
+      </div>
+    </div>
+    <div class="profile-tabs">
+      <div class="ptab-section">
+        <h3>Последние темы</h3>
+        <% if (threads.length === 0) { %><p class="muted">Нет тем</p><% } %>
+        <% for (const t of threads) { %>
+        <div class="ptab-row">
+          <a href="/forum/thread/<%= t._id %>"><%= t.title %></a>
+          <span class="muted"><%= t.section_name %> · <%= new Date(t.createdAt).toLocaleDateString('ru') %></span>
+        </div>
+        <% } %>
+      </div>
+      <div class="ptab-section">
+        <h3>Последние посты</h3>
+        <% if (posts.length === 0) { %><p class="muted">Нет постов</p><% } %>
+        <% for (const p of posts) { %>
+        <div class="ptab-row">
+          <a href="/forum/thread/<%= p.threadId %>"><%= p.thread_title %></a>
+          <div class="post-preview muted"><%= p.content.substring(0,100) %></div>
+        </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+<%- include('../partials/footer') %>
+</body></html>

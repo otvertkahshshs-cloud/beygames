@@ -1,0 +1,19 @@
+<nav class="gs-navbar">
+  <div class="gs-nav-container">
+    <ul class="gs-nav-left">
+      <li class="active"><a href="/"><img src="/img/logo.svg" style="width:28px;height:28px;filter:brightness(0) invert(1);vertical-align:middle"></a></li>
+      <li><a href="/">ФОРУМ</a></li>
+      <% if (user && user.role === 'admin') { %><li><a href="/admin">АДМИН</a></li><% } %>
+    </ul>
+    <div class="gs-nav-right">
+      <% if (user) { %>
+        <a href="/user/<%= user.username %>"><%= user.username %></a>
+        <a href="/auth/logout" class="btn-out">ВЫЙТИ</a>
+      <% } else { %>
+        <a href="/auth/login">ВОЙТИ</a>
+        <a href="/auth/register" class="btn-reg">РЕГИСТРАЦИЯ</a>
+      <% } %>
+    </div>
+  </div>
+</nav>
+<div class="rainbow-bar"></div>

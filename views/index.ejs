@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GameSense — Форум</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<%- include('partials/header') %>
+<div class="container main-wrap">
+
+  <div class="gs-hero">
+    <h1>bey<span>games</span></h1>
+    <p>Игровое сообщество · Читы · Скрипты · Общение</p>
+  </div>
+
+  <div class="index-wrap">
+    <div class="forum-main">
+      <% for (const cat of categories) { %>
+      <div class="category-block">
+        <div class="category-header">
+          <span class="cat-icon"><%= cat.icon %></span>
+          <span class="cat-name"><%= cat.name %></span>
+          <span class="cat-desc"><%= cat.description %></span>
+        </div>
+        <% for (const sec of cat.sections) { %>
+        <div class="section-row">
+          <div class="sec-icon"><%= sec.icon %></div>
+          <div class="sec-info">
+            <a href="/forum/section/<%= sec._id %>" class="sec-name"><%= sec.name %></a>
+            <div class="sec-desc"><%= sec.desc %></div>
+          </div>
+          <div class="sec-stats">
+            <div><span class="stat-num"><%= sec.threadsCount %></span> тем</div>
+            <div><span class="stat-num"><%= sec.postsCount %></span> постов</div>
+          </div>
+          <div class="sec-last">
+            <% if (sec.lastThread) { %>
+              <a href="/forum/thread/<%= sec.lastThread._id %>" class="last-title"><%= sec.lastThread.title.substring(0,38) %></a>
+              <div class="last-meta"><%= sec.lastThread.lastPostUser %></div>
+            <% } else { %>
+              <span class="no-posts">Нет тем</span>
+            <% } %>
+          </div>
+        </div>
+        <% } %>
+      </div>
+      <% } %>
+    </div>
+
+    <div class="sidebar">
+      <div class="sidebar-block">
+        <div class="sb-title">📊 Статистика</div>
+        <div class="sb-stat"><span>Пользователей:</span><b><%= stats.users %></b></div>
+        <div class="sb-stat"><span>Тем:</span><b><%= stats.threads %></b></div>
+        <div class="sb-stat"><span>Постов:</span><b><%= stats.posts %></b></div>
+      </div>
+      <div class="sidebar-block">
+        <div class="sb-title">🕐 Последние темы</div>
+        <% for (const t of latest_threads) { %>
+        <div class="sb-thread">
+          <img src="<%= t.avatar %>" class="sb-avatar" onerror="this.src='/img/default_avatar.png'">
+          <div class="sb-thread-info">
+            <a href="/forum/thread/<%= t._id %>"><%= t.title.substring(0,32) %></a>
+            <div class="sb-thread-meta"><%= t.username %> · <%= t.sectionName %></div>
+          </div>
+        </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+</div>
+<%- include('partials/footer') %>
+</body>
+</html>

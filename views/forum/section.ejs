@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head><meta charset="UTF-8"><title><%= section.name %> — GameForum</title><link rel="stylesheet" href="/css/style.css"></head>
+<body>
+<%- include('../partials/header') %>
+<div class="container main-wrap">
+  <div class="breadcrumb"><a href="/">Главная</a> › <span><%= section.cat_name %></span> › <span><%= section.name %></span></div>
+  <div class="section-top">
+    <h1 class="page-title"><%= section.icon %> <%= section.name %></h1>
+    <% if (user) { %><a href="/forum/section/<%= section._id %>/new" class="btn-primary">+ Новая тема</a><% } %>
+  </div>
+  <div class="threads-list">
+    <div class="threads-header">
+      <span></span><span>Тема</span><span>Ответы / Просмотры</span><span>Последний пост</span>
+    </div>
+    <% if (threads.length === 0) { %>
+      <div class="no-threads">Тем пока нет. Будь первым!</div>
+    <% } %>
+    <% for (const t of threads) { %>
+    <div class="thread-row <%= t.pinned ? 'pinned' : '' %> <%= t.locked ? 'locked' : '' %>">
+      <div class="th-icon"><%= t.pinned ? '📌' : t.locked ? '🔒' : '💬' %></div>
+      <div class="th-info">
+        <a href="/forum/thread/<%= t._id %>" class="thread-title"><%= t.title %></a>
+        <div class="thread-meta">
+          <img src="<%= t.avatar %>" class="mini-avatar" onerror="this.src='/img/default_avatar.png'">
+          <a href="/user/<%= t.username %>"><%= t.username %></a>
+          <span class="rank-badge"><%= t.rank %></span>
+        </div>
+      </div>
+      <div class="th-counts"><span class="replies-count"><%= t.replies %></span> / <span><%= t.views %></span></div>
+      <div class="th-last-post">
+        <div><%= t.lastPostUser %></div>
+        <div class="time-ago"><%= new Date(t.lastPostAt).toLocaleDateString('ru') %></div>
+      </div>
+    </div>
+    <% } %>
+  </div>
+  <% if (totalPages > 1) { %>
+  <div class="pagination">
+    <% for (let i = 1; i <= totalPages; i++) { %>
+      <a href="?page=<%= i %>" class="page-btn <%= page === i ? 'active' : '' %>"><%= i %></a>
+    <% } %>
+  </div>
+  <% } %>
+</div>
+<%- include('../partials/footer') %>
+</body></html>

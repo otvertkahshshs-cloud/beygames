@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head><meta charset="UTF-8"><title><%= thread.title %> — GameForum</title><link rel="stylesheet" href="/css/style.css"></head>
+<body>
+<%- include('../partials/header') %>
+<div class="container main-wrap">
+  <div class="breadcrumb"><a href="/">Главная</a> › <a href="/forum/section/<%= thread.section_id %>"><%= thread.section_name %></a> › <span><%= thread.title %></span></div>
+  <div class="thread-header">
+    <h1 class="page-title"><%= thread.title %></h1>
+    <div class="thread-meta-top">
+      <span>👁 <%= thread.views %></span>
+      <span>💬 <%= thread.replies %></span>
+      <% if (thread.pinned) { %><span class="badge-pin">📌 Закреплено</span><% } %>
+      <% if (thread.locked) { %><span class="badge-lock">🔒 Закрыто</span><% } %>
+      <% if (user && user.role === 'admin') { %>
+        <form method="POST" action="/admin/delete-thread/<%= thread._id %>" style="display:inline" onsubmit="return confirm('Удалить тему?')">
+          <button class="btn-danger" style="font-size:12px;padding:3px 10px">🗑 Удалить тему</button>
+        </form>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="posts-list" id="bottom">
+    <% for (const p of posts) { %>
+    <div class="post-row" id="post-<%= p._id %>">
+      <div class="post-author">
+        <img src="<%= p.avatar %>" class="post-avatar" onerror="this.src='/img/default_avatar.png'">
+        <a href="/user/<%= p.username %>" class="post-username"><%= p.username %></a>
+        <div class="post-rank"><%= p.rank %></div>
+        <div class="post-stats-mini">
+          <div>Постов: <%= p.posts_count %></div>
+          <div>Репутация: <%= p.reputation %></div>
+        </div>
+        <div class="post-regdate">с <%= new Date(p.reg_date).toLocaleDateString('ru') %></div>
+      </div>
+      <div class="post-body">
+        <div class="post-date"><%= new Date(p.createdAt).toLocaleString('ru') %></div>
+        <div class="post-content"><%- p.content.replace(/\n/g, '<br>') %></div>
+        <% if (p.image) { %>
+        <div class="post-image">
+          <img src="<%= p.image %>" style="max-width:100%;max-height:500px;border-radius:4px;margin-top:10px;border:1px solid var(--border)">
+        </div>
+        <% } %>
+        <% if (p.attachment) { %>
+        <div class="post-attachment">
+          <div class="attach-header">📎 Вложения</div>
+          <a href="<%= p.attachment.path %>" class="attach-file" download>
+            <div class="attach-icon">
+              <% if (['zip','rar','7z'].includes(p.attachment.ext)) { %>🗜️
+              <% } else if (['jpg','jpeg','png','gif','webp'].includes(p.attachment.ext)) { %>🖼️
+              <% } else if (['mp4','avi','mkv'].includes(p.attachment.ext)) { %>🎬
+              <% } else if (['mp3','wav','ogg'].includes(p.attachment.ext)) { %>🎵
+              <% } else if (['pdf'].includes(p.attachment.ext)) { %>📄
+              <% } else if (['exe','dll'].includes(p.attachment.ext)) { %>⚙️
+              <% } else { %>📁<% } %>
+            </div>
+            <div class="attach-info">
+              <div class="attach-name"><%= p.attachment.filename %></div>
+              <div class="attach-meta"><%= p.attachment.ext.toUpperCase() %> · <%= (p.attachment.size / 1024).toFixed(1) %> KB</div>
+            </div>
+          </a>
+        </div>
+        <% } %>
+        <% if (p.signature) { %><div class="post-signature"><%= p.signature %></div><% } %>
+        <div class="post-actions">
+          <button class="like-btn <%= likedPosts.has(p._id) ? 'liked' : '' %>" data-id="<%= p._id %>">
+            👍 <span class="like-count"><%= p.likes %></span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <% } %>
+  </div>
+
+  <% if (totalPages > 1) { %>
+  <div class="pagination">
+    <% for (let i = 1; i <= totalPages; i++) { %>
+      <a href="?page=<%= i %>" class="page-btn <%= page === i ? 'active' : '' %>"><%= i %></a>
+    <% } %>
+  </div>
+  <% } %>
+
+  <% if (user && !thread.locked) { %>
+  <div class="reply-box" id="reply">
+    <h3>Ответить</h3>
+    <form method="POST" action="/forum/thread/<%= thread._id %>/reply" enctype="multipart/form-data">
+      <textarea name="content" class="reply-textarea" rows="6" placeholder="Ваш ответ..." required></textarea>
+      <div class="attach-row">
+        <label class="attach-label">
+          📎 Прикрепить файл
+          <input type="file" name="file" class="attach-input">
+        </label>
+        <span class="attach-hint">Макс. 10MB</span>
+      </div>
+      <button type="submit" class="btn-primary">Отправить</button>
+    </form>
+  </div>
+  <% } else if (thread.locked) { %>
+    <div class="locked-msg">🔒 Тема закрыта для ответов</div>
+  <% } else { %>
+    <div class="login-msg"><a href="/auth/login">Войдите</a>, чтобы ответить</div>
+  <% } %>
+</div>
+<%- include('../partials/footer') %>
+</body></html>

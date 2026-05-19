@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head><meta charset="UTF-8"><title>Настройки — GameForum</title><link rel="stylesheet" href="/css/style.css"></head>
+<body>
+<%- include('../partials/header') %>
+<div class="container main-wrap">
+  <div class="form-box">
+    <h2>⚙ Настройки профиля</h2>
+    <% if (error) { %><div class="alert-error"><%= error %></div><% } %>
+    <% if (success) { %><div class="alert-success"><%= success %></div><% } %>
+    <form method="POST" action="/user/settings/edit" enctype="multipart/form-data">
+      <div class="form-group">
+        <label>Аватар (макс. 2MB)</label>
+        <img src="<%= user.avatar %>" class="settings-avatar" onerror="this.src='/img/default_avatar.png'">
+        <input type="file" name="avatar" class="form-input" accept="image/*">
+      </div>
+      <div class="form-group">
+        <label>Подпись</label>
+        <textarea name="signature" class="form-textarea" rows="3" maxlength="200"><%= user.signature || '' %></textarea>
+      </div>
+      <hr class="divider">
+      <h3>Сменить пароль</h3>
+      <div class="form-group"><label>Текущий пароль</label><input type="password" name="old_password" class="form-input"></div>
+      <div class="form-group"><label>Новый пароль</label><input type="password" name="new_password" class="form-input"></div>
+      <button type="submit" class="btn-primary">Сохранить</button>
+      <a href="/user/<%= user.username %>" class="btn-cancel">Отмена</a>
+    </form>
+  </div>
+</div>
+<%- include('../partials/footer') %>
+</body></html>

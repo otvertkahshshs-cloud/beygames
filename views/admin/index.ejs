@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head><meta charset="UTF-8"><title>Админ — BeyGames</title><link rel="stylesheet" href="/css/style.css"></head>
+<body>
+<%- include('../partials/header') %>
+<div class="container main-wrap">
+  <div class="admin-wrap">
+    <h1 class="page-title" style="margin-bottom:20px">⚙ Админ панель</h1>
+
+    <div class="admin-stats">
+      <div class="astat">👤 Пользователей: <b><%= stats.users %></b></div>
+      <div class="astat">💬 Тем: <b><%= stats.threads %></b></div>
+      <div class="astat">📝 Постов: <b><%= stats.posts %></b></div>
+      <div class="astat" style="border-color:<%= pending.length > 0 ? '#ffc107' : '' %>">
+        ⏳ На модерации: <b style="color:<%= pending.length > 0 ? '#ffc107' : 'var(--accent)' %>"><%= pending.length %></b>
+      </div>
+    </div>
+
+    <% if (pending.length > 0) { %>
+    <h2 style="margin-bottom:12px;color:#ffc107">⏳ Ожидают одобрения</h2>
+    <table class="admin-table" style="margin-bottom:28px">
+      <thead><tr><th>Тема</th><th>Автор</th><th>Раздел</th><th>Дата</th><th>Действия</th></tr></thead>
+      <tbody>
+      <% for (const t of pending) { %>
+      <tr>
+        <td><b><%= t.title %></b></td>
+        <td><a href="/user/<%= t.username %>"><%= t.username %></a></td>
+        <td><%= t.sectionName %></td>
+        <td><%= new Date(t.createdAt).toLocaleDateString('ru') %></td>
+        <td style="display:flex;gap:6px">
+          <form method="POST" action="/admin/approve-thread/<%= t._id %>">
+            <button class="btn-success">✓ Одобрить</button>
+          </form>
+          <form method="POST" action="/admin/reject-thread/<%= t._id %>">
+            <button class="btn-danger">✗ Отклонить</button>
+          </form>
+        </td>
+      </tr>
+      <% } %>
+      </tbody>
+    </table>
+    <% } %>
+
+    <h2 style="margin-bottom:12px">📋 Все темы</h2>
+    <table class="admin-table" style="margin-bottom:28px">
+      <thead><tr><th>Тема</th><th>Автор</th><th>Раздел</th><th>Просмотры</th><th>Удалить</th></tr></thead>
+      <tbody>
+      <% for (const t of allThreads) { %>
+      <tr>
+        <td><a href="/forum/thread/<%= t._id %>"><%= t.title %></a></td>
+        <td><a href="/user/<%= t.username %>"><%= t.username %></a></td>
+        <td><%= t.sectionName %></td>
+        <td><%= t.views %></td>
+        <td>
+          <form method="POST" action="/admin/delete-thread/<%= t._id %>">
+            <button class="btn-danger">Удалить</button>
+          </form>
+        </td>
+      </tr>
+      <% } %>
+      </tbody>
+    </table>
+
+    <h2 style="margin-bottom:12px">👤 Пользователи</h2>
+    <table class="admin-table">
+      <thead><tr><th>Логин</th><th>Email</th><th>Роль</th><th>Постов</th><th>Статус</th><th>Действия</th></tr></thead>
+      <tbody>
+      <% for (const u of users) { %>
+      <tr class="<%= u.banned ? 'banned-row' : '' %>">
+        <td><a href="/user/<%= u.username %>"><%= u.username %></a></td>
+        <td><%= u.email %></td>
+        <td><span class="role-badge role-<%= u.role %>"><%= u.role %></span></td>
+        <td><%= u.postsCount %></td>
+        <td><%= u.banned ? '<span class="badge-ban">Забанен</span>' : '<span class="badge-ok">Активен</span>' %></td>
+        <td>
+          <% if (u.role !== 'admin' || user.username === 'admin') { %>
+          <form method="POST" action="/admin/set-role/<%= u._id %>" style="display:inline;margin-right:4px">
+            <select name="role" class="form-input" style="width:110px;display:inline;padding:3px 6px;font-size:11px">
+              <option value="user"      <%= u.role==='user'      ? 'selected' : '' %>>user</option>
+              <option value="moderator" <%= u.role==='moderator' ? 'selected' : '' %>>moderator</option>
+              <option value="admin"     <%= u.role==='admin'     ? 'selected' : '' %>>admin</option>
+            </select>
+            <button class="btn-success" style="padding:3px 8px;font-size:11px">✓</button>
+          </form>
+          <% } %>
+          <% if (u.role !== 'admin') { %>
+          <form method="POST" action="/admin/<%= u.banned ? 'unban' : 'ban' %>/<%= u._id %>" style="display:inline">
+            <button class="<%= u.banned ? 'btn-success' : 'btn-danger' %>"><%= u.banned ? 'Разбанить' : 'Забанить' %></button>
+          </form>
+          <% } else { %>—<% } %>
+        </td>
+      </tr>
+      <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<%- include('../partials/footer') %>
+</body></html>
