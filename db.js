@@ -44,7 +44,7 @@ async function init() {
             id TEXT PRIMARY KEY,
             cat_id TEXT REFERENCES cats(id),
             name TEXT NOT NULL,
-            desc TEXT DEFAULT '',
+            description TEXT DEFAULT '',
             icon TEXT DEFAULT '',
             sort INTEGER DEFAULT 0,
             threads_count INTEGER DEFAULT 0,
@@ -113,7 +113,7 @@ async function init() {
         [uuidv4(), c4, 'Знакомства', 'Найди друзей', '<i class="fa-solid fa-handshake"></i>', 2],
     ];
     for (const s of secs)
-        await query('INSERT INTO sections(id,cat_id,name,desc,icon,sort,threads_count,posts_count) VALUES($1,$2,$3,$4,$5,$6,0,0)', s);
+        await query('INSERT INTO sections(id,cat_id,name,description,icon,sort,threads_count,posts_count) VALUES($1,$2,$3,$4,$5,$6,0,0)', s);
 
     const hash = bcrypt.hashSync('admin123', 10);
     await query('INSERT INTO users(id,username,email,password,role,rank) VALUES($1,$2,$3,$4,$5,$6)',
