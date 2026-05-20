@@ -122,6 +122,4 @@ async function init() {
     console.log('DB seeded. admin / admin123');
 }
 
-init().catch(console.error);
-
-module.exports = { query, uuidv4 };
+module.exports = { query, uuidv4, init };

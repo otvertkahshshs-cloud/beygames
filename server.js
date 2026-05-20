@@ -42,4 +42,11 @@ app.use('/notifications', require('./routes/notifications'));
 app.use((req, res) => res.status(404).render('404'));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Forum: http://localhost:${PORT}`));
+
+const { init } = require('./db');
+init().then(() => {
+    app.listen(PORT, () => console.log(`Forum: http://localhost:${PORT}`));
+}).catch(err => {
+    console.error('DB init failed:', err);
+    process.exit(1);
+});
