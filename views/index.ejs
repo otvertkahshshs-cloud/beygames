@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BeyGames — Форум</title>
 <link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
 <%- include('partials/header') %>
@@ -20,13 +21,13 @@
       <% for (const cat of categories) { %>
       <div class="category-block">
         <div class="category-header">
-          <span class="cat-icon"><%= cat.icon %></span>
+          <span class="cat-icon"><%- cat.icon %></span>
           <span class="cat-name"><%= cat.name %></span>
           <span class="cat-desc"><%= cat.description %></span>
         </div>
         <% for (const sec of cat.sections) { %>
         <div class="section-row">
-          <div class="sec-icon"><%= sec.icon %></div>
+          <div class="sec-icon"><%- sec.icon %></div>
           <div class="sec-info">
             <a href="/forum/section/<%= sec._id %>" class="sec-name"><%= sec.name %></a>
             <div class="sec-desc"><%= sec.desc %></div>
