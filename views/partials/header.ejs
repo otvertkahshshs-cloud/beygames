@@ -1,3 +1,4 @@
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <nav class="gs-navbar">
   <div class="gs-nav-container">
     <ul class="gs-nav-left">
@@ -7,6 +8,12 @@
     </ul>
     <div class="gs-nav-right">
       <% if (user) { %>
+        <div style="position:relative;display:inline-block">
+          <a href="/notifications" class="notif-bell">
+            <i class="fa-solid fa-bell"></i>
+            <% if (notifCount > 0) { %><span class="notif-count"><%= notifCount %></span><% } %>
+          </a>
+        </div>
         <a href="/user/<%= user.username %>"><%= user.username %></a>
         <a href="/auth/logout" class="btn-out">ВЫЙТИ</a>
       <% } else { %>

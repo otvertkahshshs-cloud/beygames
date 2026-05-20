@@ -26,7 +26,7 @@
       <div class="post-author">
         <img src="<%= p.avatar %>" class="post-avatar" onerror="this.src='/img/default_avatar.png'">
         <a href="/user/<%= p.username %>" class="post-username"><%= p.username %></a>
-        <div class="post-rank"><%= p.rank %></div>
+        <div class="post-rank"><span class="rank-badge <%= p.rankCss %>"><%= p.rank %></span></div>
         <div class="post-stats-mini">
           <div>Постов: <%= p.posts_count %></div>
           <div>Репутация: <%= p.reputation %></div>

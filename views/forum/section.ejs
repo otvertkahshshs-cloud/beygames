@@ -6,7 +6,7 @@
 <div class="container main-wrap">
   <div class="breadcrumb"><a href="/">Главная</a> › <span><%= section.cat_name %></span> › <span><%= section.name %></span></div>
   <div class="section-top">
-    <h1 class="page-title"><%= section.icon %> <%= section.name %></h1>
+    <h1 class="page-title"><%= section.name %></h1>
     <% if (user) { %><a href="/forum/section/<%= section._id %>/new" class="btn-primary">+ Новая тема</a><% } %>
   </div>
   <div class="threads-list">

@@ -1,76 +1,63 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db');
+const { query } = require('../db');
 
 function admin(req, res, next) {
     if (!req.session.user || req.session.user.role !== 'admin') return res.status(403).render('404');
     next();
 }
 
-router.get('/', admin, (req, res) => {
-    const stats = {
-        users:   db.count('users'),
-        threads: db.count('threads'),
-        posts:   db.count('posts'),
-    };
-    const users = db.find('users').sort((a,b) => new Date(b.createdAt)-new Date(a.createdAt));
-    const pending = db.find('threads', { status: 'pending' }).sort((a,b) => new Date(b.createdAt)-new Date(a.createdAt));
-    for (const t of pending) {
-        const u = db.findOne('users', { _id: t.userId });
-        const s = db.findOne('sections', { _id: t.sectionId });
-        t.username = u ? u.username : '?';
-        t.sectionName = s ? s.name : '?';
-    }
-    const allThreads = db.find('threads', { status: 'approved' }).sort((a,b) => new Date(b.createdAt)-new Date(a.createdAt)).slice(0,30);
-    for (const t of allThreads) {
-        const u = db.findOne('users', { _id: t.userId });
-        const s = db.findOne('sections', { _id: t.sectionId });
-        t.username = u ? u.username : '?';
-        t.sectionName = s ? s.name : '?';
-    }
+router.get('/', admin, async (req, res) => {
+    const statsQ = await query('SELECT (SELECT COUNT(*) FROM users) as users,(SELECT COUNT(*) FROM threads) as threads,(SELECT COUNT(*) FROM posts) as posts');
+    const stats = { users: parseInt(statsQ[0].users), threads: parseInt(statsQ[0].threads), posts: parseInt(statsQ[0].posts) };
+    const users = await query('SELECT * FROM users ORDER BY created_at DESC');
+    const pending = await query(`SELECT t.*, u.username, s.name as section_name FROM threads t JOIN users u ON t.user_id=u.id JOIN sections s ON t.section_id=s.id WHERE t.status='pending' ORDER BY t.created_at DESC`);
+    const allThreads = await query(`SELECT t.*, u.username, s.name as section_name FROM threads t JOIN users u ON t.user_id=u.id JOIN sections s ON t.section_id=s.id WHERE t.status='approved' ORDER BY t.created_at DESC LIMIT 30`);
+    for (const t of [...pending, ...allThreads]) t._id = t.id;
+    for (const u of users) u._id = u.id;
     res.render('admin/index', { stats, users, pending, allThreads });
 });
 
-router.post('/set-role/:id', admin, (req, res) => {
+router.post('/approve-thread/:id', admin, async (req, res) => {
+    await query("UPDATE threads SET status='approved' WHERE id=$1", [req.params.id]);
+    res.redirect('/admin');
+});
+
+router.post('/reject-thread/:id', admin, async (req, res) => {
+    const t = await query('SELECT * FROM threads WHERE id=$1', [req.params.id]);
+    if (t.length) {
+        await query('DELETE FROM posts WHERE thread_id=$1', [req.params.id]);
+        await query('DELETE FROM threads WHERE id=$1', [req.params.id]);
+        await query('UPDATE sections SET threads_count=threads_count-1 WHERE id=$1', [t[0].section_id]);
+    }
+    res.redirect('/admin');
+});
+
+router.post('/delete-thread/:id', admin, async (req, res) => {
+    const t = await query('SELECT * FROM threads WHERE id=$1', [req.params.id]);
+    if (t.length) {
+        await query('DELETE FROM likes WHERE post_id IN (SELECT id FROM posts WHERE thread_id=$1)', [req.params.id]);
+        await query('DELETE FROM posts WHERE thread_id=$1', [req.params.id]);
+        await query('DELETE FROM threads WHERE id=$1', [req.params.id]);
+        await query('UPDATE sections SET threads_count=threads_count-1 WHERE id=$1', [t[0].section_id]);
+    }
+    res.redirect('/admin');
+});
+
+router.post('/ban/:id', admin, async (req, res) => {
+    await query('UPDATE users SET banned=true WHERE id=$1', [req.params.id]);
+    res.redirect('/admin');
+});
+
+router.post('/unban/:id', admin, async (req, res) => {
+    await query('UPDATE users SET banned=false WHERE id=$1', [req.params.id]);
+    res.redirect('/admin');
+});
+
+router.post('/set-role/:id', admin, async (req, res) => {
     const { role } = req.body;
-    const allowed = ['user', 'moderator', 'admin'];
-    if (allowed.includes(role))
-        db.update('users', { _id: req.params.id }, { $set: { role } });
-    res.redirect('/admin');
-});
-
-router.post('/ban/:id', admin, (req, res) => {
-    db.update('users', { _id: req.params.id }, { $set: { banned: true } });
-    res.redirect('/admin');
-});
-
-router.post('/unban/:id', admin, (req, res) => {
-    db.update('users', { _id: req.params.id }, { $set: { banned: false } });
-    res.redirect('/admin');
-});
-
-router.post('/approve-thread/:id', admin, (req, res) => {
-    db.update('threads', { _id: req.params.id }, { $set: { status: 'approved' } });
-    res.redirect('/admin');
-});
-
-router.post('/reject-thread/:id', admin, (req, res) => {
-    const thread = db.findOne('threads', { _id: req.params.id });
-    if (thread) {
-        db.remove('posts', { threadId: req.params.id });
-        db.remove('threads', { _id: req.params.id });
-        db.update('sections', { _id: thread.sectionId }, { $inc: { threadsCount: -1 } });
-    }
-    res.redirect('/admin');
-});
-
-router.post('/delete-thread/:id', admin, (req, res) => {
-    const thread = db.findOne('threads', { _id: req.params.id });
-    if (thread) {
-        db.remove('posts', { threadId: req.params.id });
-        db.remove('threads', { _id: req.params.id });
-        db.update('sections', { _id: thread.sectionId }, { $inc: { threadsCount: -1 } });
-    }
+    if (['user','moderator','admin'].includes(role))
+        await query('UPDATE users SET role=$1 WHERE id=$2', [role, req.params.id]);
     res.redirect('/admin');
 });
 

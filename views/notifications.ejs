@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head><meta charset="UTF-8"><title>Уведомления — BeyGames</title><link rel="stylesheet" href="/css/style.css"></head>
+<body>
+<%- include('partials/header') %>
+<div class="container main-wrap">
+  <div class="form-box" style="max-width:700px">
+    <h2><i class="fa-solid fa-bell" style="color:var(--accent)"></i> Уведомления</h2>
+    <% if (notifs.length === 0) { %>
+      <div class="notif-empty" style="padding:30px;text-align:center;color:var(--text-muted)">Уведомлений нет</div>
+    <% } %>
+    <% for (const n of notifs) { %>
+    <div class="notif-item <%= n.read ? '' : 'unread' %>" style="border-radius:4px;margin-bottom:4px">
+      <a href="<%= n.link %>"><%- n.text %></a>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:3px"><%= new Date(n.createdAt).toLocaleString('ru') %></div>
+    </div>
+    <% } %>
+  </div>
+</div>
+<%- include('partials/footer') %>
+</body></html>

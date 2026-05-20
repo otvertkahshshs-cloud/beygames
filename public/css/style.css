@@ -442,3 +442,41 @@ a:hover { color: #fff; }
 .post-attachment .attach-icon {
     filter: grayscale(100%) brightness(2);
 }
+
+/* RANK BADGES */
+.rank-badge { padding: 2px 8px; border-radius: 3px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+.rank-newbie    { background: rgba(120,120,120,.2); color: #aaa; border: 1px solid #555; }
+.rank-member    { background: rgba(70,130,255,.2); color: #6af; border: 1px solid #46f; }
+.rank-experienced { background: rgba(100,200,100,.2); color: #6d6; border: 1px solid #4a4; }
+.rank-veteran   { background: rgba(255,180,0,.2); color: #fb0; border: 1px solid #a70; }
+.rank-legend    { background: rgba(200,50,255,.2); color: #d06fff; border: 1px solid #a030dd; }
+.rank-admin     { background: rgba(255,50,50,.2); color: #f66; border: 1px solid #c00; }
+.rank-moderator { background: rgba(0,200,180,.2); color: #0dd; border: 1px solid #0aa; }
+
+/* NOTIFICATIONS */
+.notif-bell { position: relative; cursor: pointer; color: var(--text-dim); font-size: 16px; padding: 0 8px; }
+.notif-bell:hover { color: #fff; }
+.notif-count {
+  position: absolute; top: -6px; right: 0;
+  background: var(--red); color: #fff;
+  font-size: 10px; font-weight: 700;
+  width: 16px; height: 16px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+.notif-dropdown {
+  position: absolute; right: 0; top: 40px;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 6px; width: 300px; z-index: 999;
+  box-shadow: 0 8px 24px rgba(0,0,0,.5);
+  display: none;
+}
+.notif-dropdown.open { display: block; }
+.notif-header { padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 12px; font-weight: 700; color: #fff; text-transform: uppercase; letter-spacing: 1px; }
+.notif-item { padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--text); transition: background .15s; }
+.notif-item:hover { background: var(--bg3); }
+.notif-item.unread { border-left: 3px solid var(--accent); }
+.notif-item a { color: var(--accent); }
+.notif-empty { padding: 16px; text-align: center; color: var(--text-muted); font-size: 12px; }
+.notif-footer { padding: 8px 14px; text-align: center; font-size: 11px; }
+.notif-footer a { color: var(--text-muted); }
+.notif-footer a:hover { color: var(--accent); }

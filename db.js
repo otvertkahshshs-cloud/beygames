@@ -1,93 +1,127 @@
-const fs = require('fs');
-const path = require('path');
+const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 
-if (!fs.existsSync('./data')) fs.mkdirSync('./data');
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false }
+});
 
-function loadDB(name) {
-    const file = `./data/${name}.json`;
-    if (!fs.existsSync(file)) fs.writeFileSync(file, '[]');
-    return JSON.parse(fs.readFileSync(file, 'utf8'));
-}
-
-function saveDB(name, data) {
-    fs.writeFileSync(`./data/${name}.json`, JSON.stringify(data, null, 2));
-}
-
-const db = {
-    find: (name, query = {}) => {
-        const data = loadDB(name);
-        return data.filter(item => Object.keys(query).every(k => item[k] === query[k]));
-    },
-    findOne: (name, query = {}) => {
-        const data = loadDB(name);
-        return data.find(item => Object.keys(query).every(k => item[k] === query[k])) || null;
-    },
-    insert: (name, doc) => {
-        const data = loadDB(name);
-        const newDoc = { _id: uuidv4(), ...doc };
-        data.push(newDoc);
-        saveDB(name, data);
-        return newDoc;
-    },
-    update: (name, query, changes) => {
-        const data = loadDB(name);
-        let count = 0;
-        const updated = data.map(item => {
-            if (Object.keys(query).every(k => item[k] === query[k])) {
-                count++;
-                const newItem = { ...item };
-                if (changes.$set) Object.assign(newItem, changes.$set);
-                if (changes.$inc) Object.keys(changes.$inc).forEach(k => { newItem[k] = (newItem[k] || 0) + changes.$inc[k]; });
-                return newItem;
-            }
-            return item;
-        });
-        saveDB(name, updated);
-        return count;
-    },
-    remove: (name, query) => {
-        const data = loadDB(name);
-        const filtered = data.filter(item => !Object.keys(query).every(k => item[k] === query[k]));
-        saveDB(name, filtered);
-        return data.length - filtered.length;
-    },
-    count: (name, query = {}) => {
-        return db.find(name, query).length;
+async function query(sql, params = []) {
+    const client = await pool.connect();
+    try {
+        const res = await client.query(sql, params);
+        return res.rows;
+    } finally {
+        client.release();
     }
-};
+}
 
-// Seed
-function seed() {
-    if (db.count('cats') > 0) return;
+async function init() {
+    await query(`
+        CREATE TABLE IF NOT EXISTS users (
+            id TEXT PRIMARY KEY,
+            username TEXT UNIQUE NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL,
+            avatar TEXT DEFAULT '/img/default_avatar.png',
+            role TEXT DEFAULT 'user',
+            rank TEXT DEFAULT 'Новичок',
+            posts_count INTEGER DEFAULT 0,
+            reputation INTEGER DEFAULT 0,
+            signature TEXT DEFAULT '',
+            banned BOOLEAN DEFAULT false,
+            created_at TIMESTAMPTZ DEFAULT NOW()
+        );
+        CREATE TABLE IF NOT EXISTS cats (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            description TEXT DEFAULT '',
+            icon TEXT DEFAULT '',
+            sort INTEGER DEFAULT 0
+        );
+        CREATE TABLE IF NOT EXISTS sections (
+            id TEXT PRIMARY KEY,
+            cat_id TEXT REFERENCES cats(id),
+            name TEXT NOT NULL,
+            desc TEXT DEFAULT '',
+            icon TEXT DEFAULT '',
+            sort INTEGER DEFAULT 0,
+            threads_count INTEGER DEFAULT 0,
+            posts_count INTEGER DEFAULT 0
+        );
+        CREATE TABLE IF NOT EXISTS threads (
+            id TEXT PRIMARY KEY,
+            section_id TEXT REFERENCES sections(id),
+            user_id TEXT REFERENCES users(id),
+            title TEXT NOT NULL,
+            views INTEGER DEFAULT 0,
+            replies INTEGER DEFAULT 0,
+            pinned BOOLEAN DEFAULT false,
+            locked BOOLEAN DEFAULT false,
+            status TEXT DEFAULT 'approved',
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            last_post_at TIMESTAMPTZ DEFAULT NOW(),
+            last_post_user TEXT DEFAULT ''
+        );
+        CREATE TABLE IF NOT EXISTS posts (
+            id TEXT PRIMARY KEY,
+            thread_id TEXT REFERENCES threads(id),
+            user_id TEXT REFERENCES users(id),
+            content TEXT NOT NULL,
+            image TEXT,
+            attachment JSONB,
+            likes INTEGER DEFAULT 0,
+            created_at TIMESTAMPTZ DEFAULT NOW()
+        );
+        CREATE TABLE IF NOT EXISTS likes (
+            user_id TEXT REFERENCES users(id),
+            post_id TEXT REFERENCES posts(id),
+            PRIMARY KEY (user_id, post_id)
+        );
+        CREATE TABLE IF NOT EXISTS notifications (
+            id TEXT PRIMARY KEY,
+            user_id TEXT REFERENCES users(id),
+            text TEXT NOT NULL,
+            link TEXT DEFAULT '',
+            read BOOLEAN DEFAULT false,
+            created_at TIMESTAMPTZ DEFAULT NOW()
+        );
+    `);
 
-    const cat1 = db.insert('cats', { name: 'Читы и Хаки', description: 'Всё для игровых читов', icon: '<i class="fa-solid fa-crosshairs"></i>', sort: 1 });
-    const cat2 = db.insert('cats', { name: 'Игры',        description: 'Обсуждение игр',        icon: '<i class="fa-solid fa-gamepad"></i>', sort: 2 });
-    const cat3 = db.insert('cats', { name: 'Маркет',      description: 'Купля и продажа',       icon: '<i class="fa-solid fa-tag"></i>', sort: 3 });
-    const cat4 = db.insert('cats', { name: 'Общение',     description: 'Флуд и общение',        icon: '<i class="fa-solid fa-comments"></i>', sort: 4 });
+    // Seed
+    const cats = await query('SELECT id FROM cats LIMIT 1');
+    if (cats.length > 0) return;
 
-    db.insert('sections', { catId: cat1._id, name: 'CS2',         desc: 'Читы для CS2',      icon: '<i class="fa-solid fa-gun"></i>', sort: 1, threadsCount: 0, postsCount: 0 });
-    db.insert('sections', { catId: cat1._id, name: 'Valorant',    desc: 'Читы для Valorant', icon: '<i class="fa-solid fa-bolt"></i>', sort: 2, threadsCount: 0, postsCount: 0 });
-    db.insert('sections', { catId: cat1._id, name: 'Rust',        desc: 'Читы для Rust',     icon: '<i class="fa-solid fa-axe"></i>', sort: 3, threadsCount: 0, postsCount: 0 });
-    db.insert('sections', { catId: cat2._id, name: 'CS2',         desc: 'Обсуждение CS2',    icon: '<i class="fa-solid fa-gun"></i>', sort: 1, threadsCount: 0, postsCount: 0 });
-    db.insert('sections', { catId: cat2._id, name: 'Другие игры', desc: 'Прочие игры',       icon: '<i class="fa-solid fa-dice"></i>', sort: 2, threadsCount: 0, postsCount: 0 });
-    db.insert('sections', { catId: cat3._id, name: 'Аккаунты',    desc: 'Продажа аккаунтов', icon: '<i class="fa-solid fa-user"></i>', sort: 1, threadsCount: 0, postsCount: 0 });
-    db.insert('sections', { catId: cat3._id, name: 'Услуги',      desc: 'Игровые услуги',    icon: '<i class="fa-solid fa-wrench"></i>', sort: 2, threadsCount: 0, postsCount: 0 });
-    db.insert('sections', { catId: cat4._id, name: 'Флудилка',    desc: 'Общение обо всём',  icon: '<i class="fa-solid fa-fire"></i>', sort: 1, threadsCount: 0, postsCount: 0 });
-    db.insert('sections', { catId: cat4._id, name: 'Знакомства',  desc: 'Найди друзей',      icon: '<i class="fa-solid fa-handshake"></i>', sort: 2, threadsCount: 0, postsCount: 0 });
+    const c1 = uuidv4(), c2 = uuidv4(), c3 = uuidv4(), c4 = uuidv4();
+    await query(`INSERT INTO cats VALUES
+        ($1,'Читы и Хаки','Всё для игровых читов','<i class="fa-solid fa-crosshairs"></i>',1),
+        ($2,'Игры','Обсуждение игр','<i class="fa-solid fa-gamepad"></i>',2),
+        ($3,'Маркет','Купля и продажа','<i class="fa-solid fa-tag"></i>',3),
+        ($4,'Общение','Флуд и общение','<i class="fa-solid fa-comments"></i>',4)
+    `, [c1, c2, c3, c4]);
+
+    const secs = [
+        [uuidv4(), c1, 'CS2', 'Читы для CS2', '<i class="fa-solid fa-gun"></i>', 1],
+        [uuidv4(), c1, 'Valorant', 'Читы для Valorant', '<i class="fa-solid fa-bolt"></i>', 2],
+        [uuidv4(), c1, 'Rust', 'Читы для Rust', '<i class="fa-solid fa-biohazard"></i>', 3],
+        [uuidv4(), c2, 'CS2', 'Обсуждение CS2', '<i class="fa-solid fa-gun"></i>', 1],
+        [uuidv4(), c2, 'Другие игры', 'Прочие игры', '<i class="fa-solid fa-dice"></i>', 2],
+        [uuidv4(), c3, 'Аккаунты', 'Продажа аккаунтов', '<i class="fa-solid fa-user"></i>', 1],
+        [uuidv4(), c3, 'Услуги', 'Игровые услуги', '<i class="fa-solid fa-wrench"></i>', 2],
+        [uuidv4(), c4, 'Флудилка', 'Общение обо всём', '<i class="fa-solid fa-fire"></i>', 1],
+        [uuidv4(), c4, 'Знакомства', 'Найди друзей', '<i class="fa-solid fa-handshake"></i>', 2],
+    ];
+    for (const s of secs)
+        await query('INSERT INTO sections(id,cat_id,name,desc,icon,sort,threads_count,posts_count) VALUES($1,$2,$3,$4,$5,$6,0,0)', s);
 
     const hash = bcrypt.hashSync('admin123', 10);
-    db.insert('users', {
-        username: 'admin', email: 'admin@forum.ru', password: hash,
-        avatar: '/img/default_avatar.png', role: 'admin', rank: 'Администратор',
-        postsCount: 0, reputation: 0, signature: '', banned: false,
-        createdAt: new Date().toISOString()
-    });
+    await query('INSERT INTO users(id,username,email,password,role,rank) VALUES($1,$2,$3,$4,$5,$6)',
+        [uuidv4(), 'admin', 'admin@forum.ru', hash, 'admin', 'Администратор']);
 
-    console.log('База создана. Логин: admin / Пароль: admin123');
+    console.log('DB seeded. admin / admin123');
 }
 
-seed();
+init().catch(console.error);
 
-module.exports = db;
+module.exports = { query, uuidv4 };
