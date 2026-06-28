@@ -24,7 +24,7 @@ router.get('/section/:id', async (req, res) => {
         if (!rows.length) return res.status(404).render('404');
         const section = rows[0]; section._id = section.id;
         const page = parseInt(req.query.page)||1, perPage = 20;
-        const total = parseInt((await query('SELECT COUNT(*) FROM threads WHERE section_id=$1 AND status=$2', [req.params.id,'approved']))[0].count);
+        const total = parseInt((await query('SELECT COUNT(*) as count FROM threads WHERE section_id=$1 AND status=$2', [req.params.id,'approved']))[0].count);
         const threads = await query(`
             SELECT t.*, u.username, u.avatar, u.rank FROM threads t JOIN users u ON t.user_id=u.id
             WHERE t.section_id=$1 AND t.status='approved'
@@ -45,7 +45,7 @@ router.get('/thread/:id', async (req, res) => {
         const thread = rows[0]; thread._id = thread.id;
         await query('UPDATE threads SET views=views+1 WHERE id=$1', [req.params.id]);
         const page = parseInt(req.query.page)||1, perPage = 15;
-        const total = parseInt((await query('SELECT COUNT(*) FROM posts WHERE thread_id=$1', [req.params.id]))[0].count);
+        const total = parseInt((await query('SELECT COUNT(*) as count FROM posts WHERE thread_id=$1', [req.params.id]))[0].count);
         const posts = await query(`
             SELECT p.*, u.username, u.avatar, u.role, u.posts_count, u.reputation, u.signature, u.created_at as reg_date
             FROM posts p JOIN users u ON p.user_id=u.id WHERE p.thread_id=$1 ORDER BY p.created_at LIMIT $2 OFFSET $3
@@ -114,7 +114,7 @@ router.post('/thread/:id/reply', auth, upload.single('file'), async (req, res) =
         if (thread.user_id !== user.id)
             await query('INSERT INTO notifications(id,user_id,text,link) VALUES($1,$2,$3,$4)',
                 [uuidv4(), thread.user_id, `<b>${user.username}</b> ответил в вашей теме «${thread.title.substring(0,40)}»`, `/forum/thread/${req.params.id}`]);
-        const total = parseInt((await query('SELECT COUNT(*) FROM posts WHERE thread_id=$1', [req.params.id]))[0].count);
+        const total = parseInt((await query('SELECT COUNT(*) as count FROM posts WHERE thread_id=$1', [req.params.id]))[0].count);
         res.redirect('/forum/thread/'+req.params.id+'?page='+Math.ceil(total/15)+'#bottom');
     } catch(e) { console.error(e); res.status(500).send('Ошибка: '+e.message); }
 });

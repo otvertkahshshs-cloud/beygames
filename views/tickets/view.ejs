@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head><meta charset="UTF-8"><title>Тикет — DealerHook</title><link rel="stylesheet" href="/css/style.css"></head>
+<body>
+<%- include('../partials/header') %>
+<div class="container main-wrap">
+  <div class="form-box" style="max-width:700px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+      <h2 style="margin:0"><i class="fa-solid fa-ticket" style="color:var(--accent)"></i> <%= ticket.subject %></h2>
+      <span style="color:<%= ticket.status==='open' ? 'var(--accent)' : '#888' %>;font-size:.8rem;font-weight:700">
+        <%= ticket.status==='open' ? '● ОТКРЫТ' : '● ЗАКРЫТ' %>
+      </span>
+    </div>
+
+    <% for (const r of replies) { %>
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:12px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="color:var(--accent);font-weight:700;font-size:.85rem"><%= r.username %></span>
+        <span style="color:var(--text-muted);font-size:.75rem"><%= new Date(r.created_at).toLocaleString('ru') %></span>
+      </div>
+      <div style="font-size:.88rem;color:var(--text);white-space:pre-wrap"><%= r.message %></div>
+    </div>
+    <% } %>
+
+    <% if (ticket.status === 'open') { %>
+    <form method="POST" action="/tickets/<%= ticket.id %>/reply" style="margin-top:16px">
+      <textarea name="message" rows="4" placeholder="Ответить..." required style="width:100%;box-sizing:border-box"></textarea>
+      <div style="display:flex;gap:10px;margin-top:8px;align-items:center">
+        <button type="submit" class="btn-primary">Ответить</button>
+        <% if (user && user.role === 'admin') { %>
+        <button type="submit" form="close-form" class="btn-danger">Закрыть тикет</button>
+        <% } %>
+      </div>
+    </form>
+    <% if (user && user.role === 'admin') { %>
+    <form id="close-form" method="POST" action="/tickets/<%= ticket.id %>/close"></form>
+    <% } %>
+    <% } else { %>
+    <div style="margin-top:16px;padding:10px;text-align:center;color:#888;font-size:.85rem;border-top:1px solid var(--border)">Тикет закрыт</div>
+    <% } %>
+
+    <div style="margin-top:12px"><a href="/tickets" style="color:var(--text-muted);font-size:.82rem">← Все тикеты</a></div>
+  </div>
+</div>
+<%- include('../partials/footer') %>
+</body></html>

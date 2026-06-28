@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head><meta charset="UTF-8"><title>Тикеты — DealerHook</title><link rel="stylesheet" href="/css/style.css"></head>
+<body>
+<%- include('../partials/header') %>
+<div class="container main-wrap">
+  <div class="form-box" style="max-width:800px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <h2 style="margin:0"><i class="fa-solid fa-ticket" style="color:var(--accent)"></i> Тикеты</h2>
+      <a href="/tickets/new" class="btn-primary"><i class="fa-solid fa-plus"></i> Новый тикет</a>
+    </div>
+    <% if (!tickets.length) { %>
+      <div style="padding:30px;text-align:center;color:var(--text-muted)">Тикетов нет</div>
+    <% } else { %>
+    <table style="width:100%;border-collapse:collapse;font-size:.85rem">
+      <thead>
+        <tr style="border-bottom:1px solid var(--border);color:var(--text-muted)">
+          <th style="padding:8px;text-align:left">Тема</th>
+          <th style="padding:8px">Автор</th>
+          <th style="padding:8px">Статус</th>
+          <th style="padding:8px">Дата</th>
+        </tr>
+      </thead>
+      <tbody>
+      <% for (const t of tickets) { %>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:8px"><a href="/tickets/<%= t.id %>"><%= t.subject %></a></td>
+          <td style="padding:8px;text-align:center;color:var(--text-muted)"><%= t.username %></td>
+          <td style="padding:8px;text-align:center">
+            <span style="color:<%= t.status==='open' ? 'var(--accent)' : '#888' %>"><%= t.status==='open' ? 'Открыт' : 'Закрыт' %></span>
+          </td>
+          <td style="padding:8px;text-align:center;color:var(--text-muted);font-size:.75rem"><%= new Date(t.created_at).toLocaleDateString('ru') %></td>
+        </tr>
+      <% } %>
+      </tbody>
+    </table>
+    <% } %>
+  </div>
+</div>
+<%- include('../partials/footer') %>
+</body></html>

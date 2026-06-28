@@ -9,7 +9,7 @@ function auth(req, res, next) {
 
 router.get('/', auth, async (req, res) => {
     const notifs = await query('SELECT * FROM notifications WHERE user_id=$1 ORDER BY created_at DESC LIMIT 30', [req.session.user.id]);
-    await query('UPDATE notifications SET read=true WHERE user_id=$1', [req.session.user.id]);
+    await query('UPDATE notifications SET read=1 WHERE user_id=$1', [req.session.user.id]);
     res.render('notifications', { notifs });
 });
 

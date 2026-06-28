@@ -45,12 +45,12 @@ router.post('/delete-thread/:id', admin, async (req, res) => {
 });
 
 router.post('/ban/:id', admin, async (req, res) => {
-    await query('UPDATE users SET banned=true WHERE id=$1', [req.params.id]);
+    await query('UPDATE users SET banned=1 WHERE id=$1', [req.params.id]);
     res.redirect('/admin');
 });
 
 router.post('/unban/:id', admin, async (req, res) => {
-    await query('UPDATE users SET banned=false WHERE id=$1', [req.params.id]);
+    await query('UPDATE users SET banned=0 WHERE id=$1', [req.params.id]);
     res.redirect('/admin');
 });
 

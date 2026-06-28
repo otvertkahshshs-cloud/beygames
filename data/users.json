@@ -1,0 +1,30 @@
+[
+  {
+    "_id": "5ce5ee3d-9404-43f2-a224-7bad5f23732a",
+    "username": "admin",
+    "email": "admin@forum.ru",
+    "password": "$2a$10$hIvMWZaJ8fBdpu6cx5lQpual.gO/Kq9dXG8hHPNOVEEpebf8.87FS",
+    "avatar": "/img/default_avatar.png",
+    "role": "admin",
+    "rank": "Администратор",
+    "postsCount": 2,
+    "reputation": 0,
+    "signature": "",
+    "banned": false,
+    "createdAt": "2026-05-20T06:20:51.694Z"
+  },
+  {
+    "_id": "cd03064b-f557-4673-a344-f0fa9cf0994b",
+    "username": "ffff",
+    "email": "goshamal@bk.ru",
+    "password": "$2a$10$Fyn4fB3vnmwPTtY15SD7BerqFCClfw4mji73WNdN3n9NHGaJb05me",
+    "avatar": "/img/default_avatar.png",
+    "role": "user",
+    "rank": "Новичок",
+    "postsCount": 1,
+    "reputation": 0,
+    "signature": "",
+    "banned": false,
+    "createdAt": "2026-05-20T11:24:59.674Z"
+  }
+]

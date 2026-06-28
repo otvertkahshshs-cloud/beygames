@@ -1,0 +1,92 @@
+[
+  {
+    "_id": "2249c23e-2234-4faa-93ba-f85fdce7b406",
+    "catId": "dc39bd48-6d1c-4cd5-8ccd-bf6a75e4299b",
+    "name": "CS2",
+    "desc": "Читы для CS2",
+    "icon": "<i class=\"fa-solid fa-gun\"></i>",
+    "sort": 1,
+    "threadsCount": 0,
+    "postsCount": 2
+  },
+  {
+    "_id": "0a33a1ba-a4c9-47c8-8cbc-f453658a1ac1",
+    "catId": "dc39bd48-6d1c-4cd5-8ccd-bf6a75e4299b",
+    "name": "Valorant",
+    "desc": "Читы для Valorant",
+    "icon": "<i class=\"fa-solid fa-bolt\"></i>",
+    "sort": 2,
+    "threadsCount": 0,
+    "postsCount": 0
+  },
+  {
+    "_id": "12042da7-d042-4893-b8d0-0cee34f009aa",
+    "catId": "dc39bd48-6d1c-4cd5-8ccd-bf6a75e4299b",
+    "name": "Rust",
+    "desc": "Читы для Rust",
+    "icon": "<i class=\"fa-solid fa-biohazard\"></i>",
+    "sort": 3,
+    "threadsCount": 0,
+    "postsCount": 0
+  },
+  {
+    "_id": "415e42a0-5289-4b54-9f18-7c55e19159f4",
+    "catId": "04d1be6e-e1f9-46ad-b86c-c09808a5f231",
+    "name": "CS2",
+    "desc": "Обсуждение CS2",
+    "icon": "<i class=\"fa-solid fa-gun\"></i>",
+    "sort": 1,
+    "threadsCount": 0,
+    "postsCount": 0
+  },
+  {
+    "_id": "a7228421-d4ab-438b-ab62-9206461f3568",
+    "catId": "04d1be6e-e1f9-46ad-b86c-c09808a5f231",
+    "name": "Другие игры",
+    "desc": "Прочие игры",
+    "icon": "<i class=\"fa-solid fa-dice\"></i>",
+    "sort": 2,
+    "threadsCount": 0,
+    "postsCount": 0
+  },
+  {
+    "_id": "60a7bd63-39b8-4e90-aa72-d576cfddc9df",
+    "catId": "b8a4e23b-2d22-4a1a-80ab-789ef8458bbb",
+    "name": "Аккаунты",
+    "desc": "Продажа аккаунтов",
+    "icon": "<i class=\"fa-solid fa-user\"></i>",
+    "sort": 1,
+    "threadsCount": 0,
+    "postsCount": 0
+  },
+  {
+    "_id": "c2b2dbfd-7caf-4f2c-a99d-8444947e6af9",
+    "catId": "b8a4e23b-2d22-4a1a-80ab-789ef8458bbb",
+    "name": "Услуги",
+    "desc": "Игровые услуги",
+    "icon": "<i class=\"fa-solid fa-wrench\"></i>",
+    "sort": 2,
+    "threadsCount": 0,
+    "postsCount": 0
+  },
+  {
+    "_id": "6a168538-d75b-4b7f-a73f-352fddc38379",
+    "catId": "68a65daf-07aa-40a9-bc22-7ab092a2659c",
+    "name": "Флудилка",
+    "desc": "Общение обо всём",
+    "icon": "<i class=\"fa-solid fa-fire\"></i>",
+    "sort": 1,
+    "threadsCount": 0,
+    "postsCount": 1
+  },
+  {
+    "_id": "7fffae93-a565-4055-979e-fd19cfcc9c5d",
+    "catId": "68a65daf-07aa-40a9-bc22-7ab092a2659c",
+    "name": "Знакомства",
+    "desc": "Найди друзей",
+    "icon": "<i class=\"fa-solid fa-handshake\"></i>",
+    "sort": 2,
+    "threadsCount": 0,
+    "postsCount": 0
+  }
+]

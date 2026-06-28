@@ -1,0 +1,30 @@
+[
+  {
+    "_id": "dc39bd48-6d1c-4cd5-8ccd-bf6a75e4299b",
+    "name": "Читы и Хаки",
+    "description": "Всё для игровых читов",
+    "icon": "<i class=\"fa-solid fa-crosshairs\"></i>",
+    "sort": 1
+  },
+  {
+    "_id": "04d1be6e-e1f9-46ad-b86c-c09808a5f231",
+    "name": "Игры",
+    "description": "Обсуждение игр",
+    "icon": "<i class=\"fa-solid fa-gamepad\"></i>",
+    "sort": 2
+  },
+  {
+    "_id": "b8a4e23b-2d22-4a1a-80ab-789ef8458bbb",
+    "name": "Маркет",
+    "description": "Купля и продажа",
+    "icon": "<i class=\"fa-solid fa-tag\"></i>",
+    "sort": 3
+  },
+  {
+    "_id": "68a65daf-07aa-40a9-bc22-7ab092a2659c",
+    "name": "Общение",
+    "description": "Флуд и общение",
+    "icon": "<i class=\"fa-solid fa-comments\"></i>",
+    "sort": 4
+  }
+]

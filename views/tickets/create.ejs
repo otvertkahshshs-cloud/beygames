@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head><meta charset="UTF-8"><title>Новый тикет — DealerHook</title><link rel="stylesheet" href="/css/style.css"></head>
+<body>
+<%- include('../partials/header') %>
+<div class="container main-wrap">
+  <div class="form-box" style="max-width:600px">
+    <h2><i class="fa-solid fa-ticket" style="color:var(--accent)"></i> Новый тикет</h2>
+    <% if (error) { %><div class="alert-error"><%= error %></div><% } %>
+    <form method="POST" action="/tickets/new">
+      <div class="form-group">
+        <label>Тема</label>
+        <input type="text" name="subject" maxlength="100" required placeholder="Кратко опишите проблему">
+      </div>
+      <div class="form-group">
+        <label>Сообщение</label>
+        <textarea name="message" rows="6" required placeholder="Подробное описание..."></textarea>
+      </div>
+      <button type="submit" class="btn-primary">Отправить</button>
+      <a href="/tickets" style="margin-left:12px;color:var(--text-muted);font-size:.85rem">Отмена</a>
+    </form>
+  </div>
+</div>
+<%- include('../partials/footer') %>
+</body></html>

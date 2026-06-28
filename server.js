@@ -23,7 +23,7 @@ app.use(async (req, res, next) => {
     if (req.session.user) {
         try {
             const { query } = require('./db');
-            const rows = await query('SELECT COUNT(*) FROM notifications WHERE user_id=$1 AND read=false', [req.session.user.id]);
+            const rows = await query('SELECT COUNT(*) as count FROM notifications WHERE user_id=$1 AND read=0', [req.session.user.id]);
             res.locals.notifCount = parseInt(rows[0].count);
         } catch(e) { res.locals.notifCount = 0; }
     } else {
@@ -38,6 +38,9 @@ app.use('/forum', require('./routes/forum'));
 app.use('/user', require('./routes/user'));
 app.use('/admin', require('./routes/admin'));
 app.use('/notifications', require('./routes/notifications'));
+app.use('/chat', require('./routes/chat'));
+app.use('/loader', require('./routes/loader'));
+app.use('/tickets', require('./routes/tickets'));
 
 app.use((req, res) => res.status(404).render('404'));
 

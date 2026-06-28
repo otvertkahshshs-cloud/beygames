@@ -1,24 +1,46 @@
-const { Pool } = require('pg');
+const Database = require('better-sqlite3');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
+const path = require('path');
+const fs = require('fs');
 
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
-});
+const DB_PATH = path.join(__dirname, 'data', 'forum.db');
+const db = new Database(DB_PATH);
+db.pragma('journal_mode = WAL');
+db.pragma('foreign_keys = ON');
 
+// Adapter: same async API as pg, converts $1/$2 -> ?, translates pg syntax
 async function query(sql, params = []) {
-    const client = await pool.connect();
-    try {
-        const res = await client.query(sql, params);
-        return res.rows;
-    } finally {
-        client.release();
+    let s = sql.replace(/\$(\d+)/g, '?');
+    s = s.replace(/TIMESTAMPTZ/gi, 'TEXT');
+    s = s.replace(/BOOLEAN/gi, 'INTEGER');
+    s = s.replace(/JSONB/gi, 'TEXT');
+    s = s.replace(/NOW\(\)/gi, "datetime('now')");
+
+    // Handle RETURNING * — run INSERT then SELECT the row back
+    const returning = /RETURNING \*/i.test(s);
+    if (returning) {
+        s = s.replace(/\s*RETURNING \*/i, '');
+        db.prepare(s).run(...params);
+        const m = s.match(/INSERT INTO (\w+)/i);
+        if (m) {
+            const row = db.prepare(`SELECT * FROM ${m[1]} WHERE id=?`).get(params[0]);
+            return row ? [row] : [];
+        }
+        return [];
+    }
+
+    const stmt = db.prepare(s);
+    if (/^\s*(SELECT|WITH)/i.test(s)) {
+        return stmt.all(...params);
+    } else {
+        stmt.run(...params);
+        return [];
     }
 }
 
 async function init() {
-    await query(`
+    db.exec(`
         CREATE TABLE IF NOT EXISTS users (
             id TEXT PRIMARY KEY,
             username TEXT UNIQUE NOT NULL,
@@ -30,8 +52,8 @@ async function init() {
             posts_count INTEGER DEFAULT 0,
             reputation INTEGER DEFAULT 0,
             signature TEXT DEFAULT '',
-            banned BOOLEAN DEFAULT false,
-            created_at TIMESTAMPTZ DEFAULT NOW()
+            banned INTEGER DEFAULT 0,
+            created_at TEXT DEFAULT (datetime('now'))
         );
         CREATE TABLE IF NOT EXISTS cats (
             id TEXT PRIMARY KEY,
@@ -57,11 +79,11 @@ async function init() {
             title TEXT NOT NULL,
             views INTEGER DEFAULT 0,
             replies INTEGER DEFAULT 0,
-            pinned BOOLEAN DEFAULT false,
-            locked BOOLEAN DEFAULT false,
+            pinned INTEGER DEFAULT 0,
+            locked INTEGER DEFAULT 0,
             status TEXT DEFAULT 'approved',
-            created_at TIMESTAMPTZ DEFAULT NOW(),
-            last_post_at TIMESTAMPTZ DEFAULT NOW(),
+            created_at TEXT DEFAULT (datetime('now')),
+            last_post_at TEXT DEFAULT (datetime('now')),
             last_post_user TEXT DEFAULT ''
         );
         CREATE TABLE IF NOT EXISTS posts (
@@ -70,9 +92,9 @@ async function init() {
             user_id TEXT REFERENCES users(id),
             content TEXT NOT NULL,
             image TEXT,
-            attachment JSONB,
+            attachment TEXT,
             likes INTEGER DEFAULT 0,
-            created_at TIMESTAMPTZ DEFAULT NOW()
+            created_at TEXT DEFAULT (datetime('now'))
         );
         CREATE TABLE IF NOT EXISTS likes (
             user_id TEXT REFERENCES users(id),
@@ -84,42 +106,122 @@ async function init() {
             user_id TEXT REFERENCES users(id),
             text TEXT NOT NULL,
             link TEXT DEFAULT '',
-            read BOOLEAN DEFAULT false,
-            created_at TIMESTAMPTZ DEFAULT NOW()
+            read INTEGER DEFAULT 0,
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+        CREATE TABLE IF NOT EXISTS tickets (
+            id TEXT PRIMARY KEY,
+            user_id TEXT REFERENCES users(id),
+            username TEXT NOT NULL,
+            subject TEXT NOT NULL,
+            status TEXT DEFAULT 'open',
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+        CREATE TABLE IF NOT EXISTS ticket_replies (
+            id TEXT PRIMARY KEY,
+            ticket_id TEXT REFERENCES tickets(id),
+            user_id TEXT REFERENCES users(id),
+            username TEXT NOT NULL,
+            message TEXT NOT NULL,
+            created_at TEXT DEFAULT (datetime('now'))
         );
     `);
 
-    // Seed
-    const cats = await query('SELECT id FROM cats LIMIT 1');
-    if (cats.length > 0) return;
+    migrateFromJson();
+
+    const cats = db.prepare('SELECT id FROM cats LIMIT 1').get();
+    if (cats) return;
 
     const c1 = uuidv4(), c2 = uuidv4(), c3 = uuidv4(), c4 = uuidv4();
-    await query(`INSERT INTO cats VALUES
-        ($1,'Читы и Хаки','Всё для игровых читов','<i class="fa-solid fa-crosshairs"></i>',1),
-        ($2,'Игры','Обсуждение игр','<i class="fa-solid fa-gamepad"></i>',2),
-        ($3,'Маркет','Купля и продажа','<i class="fa-solid fa-tag"></i>',3),
-        ($4,'Общение','Флуд и общение','<i class="fa-solid fa-comments"></i>',4)
-    `, [c1, c2, c3, c4]);
+    db.prepare('INSERT INTO cats VALUES (?,?,?,?,?)').run(c1,'Читы и Хаки','Всё для игровых читов','<i class="fa-solid fa-crosshairs"></i>',1);
+    db.prepare('INSERT INTO cats VALUES (?,?,?,?,?)').run(c2,'Игры','Обсуждение игр','<i class="fa-solid fa-gamepad"></i>',2);
+    db.prepare('INSERT INTO cats VALUES (?,?,?,?,?)').run(c3,'Маркет','Купля и продажа','<i class="fa-solid fa-tag"></i>',3);
+    db.prepare('INSERT INTO cats VALUES (?,?,?,?,?)').run(c4,'Общение','Флуд и общение','<i class="fa-solid fa-comments"></i>',4);
 
     const secs = [
-        [uuidv4(), c1, 'CS2', 'Читы для CS2', '<i class="fa-solid fa-gun"></i>', 1],
-        [uuidv4(), c1, 'Valorant', 'Читы для Valorant', '<i class="fa-solid fa-bolt"></i>', 2],
-        [uuidv4(), c1, 'Rust', 'Читы для Rust', '<i class="fa-solid fa-biohazard"></i>', 3],
-        [uuidv4(), c2, 'CS2', 'Обсуждение CS2', '<i class="fa-solid fa-gun"></i>', 1],
-        [uuidv4(), c2, 'Другие игры', 'Прочие игры', '<i class="fa-solid fa-dice"></i>', 2],
-        [uuidv4(), c3, 'Аккаунты', 'Продажа аккаунтов', '<i class="fa-solid fa-user"></i>', 1],
-        [uuidv4(), c3, 'Услуги', 'Игровые услуги', '<i class="fa-solid fa-wrench"></i>', 2],
-        [uuidv4(), c4, 'Флудилка', 'Общение обо всём', '<i class="fa-solid fa-fire"></i>', 1],
-        [uuidv4(), c4, 'Знакомства', 'Найди друзей', '<i class="fa-solid fa-handshake"></i>', 2],
+        [uuidv4(),c1,'CS2','Читы для CS2','<i class="fa-solid fa-gun"></i>',1],
+        [uuidv4(),c1,'Valorant','Читы для Valorant','<i class="fa-solid fa-bolt"></i>',2],
+        [uuidv4(),c1,'Rust','Читы для Rust','<i class="fa-solid fa-biohazard"></i>',3],
+        [uuidv4(),c2,'CS2','Обсуждение CS2','<i class="fa-solid fa-gun"></i>',1],
+        [uuidv4(),c2,'Другие игры','Прочие игры','<i class="fa-solid fa-dice"></i>',2],
+        [uuidv4(),c3,'Аккаунты','Продажа аккаунтов','<i class="fa-solid fa-user"></i>',1],
+        [uuidv4(),c3,'Услуги','Игровые услуги','<i class="fa-solid fa-wrench"></i>',2],
+        [uuidv4(),c4,'Флудилка','Общение обо всём','<i class="fa-solid fa-fire"></i>',1],
+        [uuidv4(),c4,'Знакомства','Найди друзей','<i class="fa-solid fa-handshake"></i>',2],
     ];
     for (const s of secs)
-        await query('INSERT INTO sections(id,cat_id,name,description,icon,sort,threads_count,posts_count) VALUES($1,$2,$3,$4,$5,$6,0,0)', s);
+        db.prepare('INSERT INTO sections(id,cat_id,name,description,icon,sort,threads_count,posts_count) VALUES(?,?,?,?,?,?,0,0)').run(...s);
 
     const hash = bcrypt.hashSync('admin123', 10);
-    await query('INSERT INTO users(id,username,email,password,role,rank) VALUES($1,$2,$3,$4,$5,$6)',
-        [uuidv4(), 'admin', 'admin@forum.ru', hash, 'admin', 'Администратор']);
-
+    db.prepare('INSERT INTO users(id,username,email,password,role,rank) VALUES(?,?,?,?,?,?)').run(uuidv4(),'admin','admin@forum.ru',hash,'admin','Администратор');
     console.log('DB seeded. admin / admin123');
+}
+
+function migrateFromJson() {
+    const dataDir = path.join(__dirname, 'data');
+
+    if (!db.prepare('SELECT id FROM cats LIMIT 1').get()) {
+        const f = path.join(dataDir, 'cats.json');
+        if (fs.existsSync(f)) {
+            for (const c of JSON.parse(fs.readFileSync(f, 'utf8')))
+                db.prepare('INSERT OR IGNORE INTO cats VALUES(?,?,?,?,?)').run(c._id, c.name, c.description||'', c.icon||'', c.sort||0);
+        }
+    }
+
+    if (!db.prepare('SELECT id FROM sections LIMIT 1').get()) {
+        const f = path.join(dataDir, 'sections.json');
+        if (fs.existsSync(f)) {
+            for (const s of JSON.parse(fs.readFileSync(f, 'utf8')))
+                db.prepare('INSERT OR IGNORE INTO sections(id,cat_id,name,description,icon,sort,threads_count,posts_count) VALUES(?,?,?,?,?,?,?,?)').run(
+                    s._id, s.catId, s.name, s.desc||'', s.icon||'', s.sort||0, s.threadsCount||0, s.postsCount||0);
+        }
+    }
+
+    if (!db.prepare('SELECT id FROM users LIMIT 1').get()) {
+        const f = path.join(dataDir, 'users.json');
+        if (fs.existsSync(f)) {
+            for (const u of JSON.parse(fs.readFileSync(f, 'utf8')))
+                db.prepare('INSERT OR IGNORE INTO users(id,username,email,password,avatar,role,rank,posts_count,reputation,signature,banned,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)').run(
+                    u._id, u.username, u.email, u.password, u.avatar||'/img/default_avatar.png',
+                    u.role||'user', u.rank||'Новичок', u.postsCount||0, u.reputation||0,
+                    u.signature||'', u.banned?1:0, u.createdAt||new Date().toISOString());
+        }
+    }
+
+    if (!db.prepare('SELECT id FROM threads LIMIT 1').get()) {
+        const f = path.join(dataDir, 'threads.json');
+        if (fs.existsSync(f)) {
+            const threads = JSON.parse(fs.readFileSync(f, 'utf8'));
+            if (Array.isArray(threads))
+                for (const t of threads)
+                    db.prepare('INSERT OR IGNORE INTO threads(id,section_id,user_id,title,views,replies,pinned,locked,status,created_at,last_post_at,last_post_user) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)').run(
+                        t._id, t.sectionId, t.userId, t.title, t.views||0, t.replies||0,
+                        t.pinned?1:0, t.locked?1:0, t.status||'approved',
+                        t.createdAt||new Date().toISOString(), t.lastPostAt||new Date().toISOString(), t.lastPostUser||'');
+        }
+    }
+
+    if (!db.prepare('SELECT id FROM posts LIMIT 1').get()) {
+        const f = path.join(dataDir, 'posts.json');
+        if (fs.existsSync(f)) {
+            const posts = JSON.parse(fs.readFileSync(f, 'utf8'));
+            if (Array.isArray(posts))
+                for (const p of posts)
+                    db.prepare('INSERT OR IGNORE INTO posts(id,thread_id,user_id,content,image,attachment,likes,created_at) VALUES(?,?,?,?,?,?,?,?)').run(
+                        p._id, p.threadId, p.userId, p.content, p.image||null,
+                        p.attachment ? JSON.stringify(p.attachment) : null, p.likes||0,
+                        p.createdAt||new Date().toISOString());
+        }
+    }
+
+    if (!db.prepare('SELECT id FROM notifications LIMIT 1').get()) {
+        const f = path.join(dataDir, 'notifications.json');
+        if (fs.existsSync(f)) {
+            for (const n of JSON.parse(fs.readFileSync(f, 'utf8')))
+                db.prepare('INSERT OR IGNORE INTO notifications(id,user_id,text,link,read,created_at) VALUES(?,?,?,?,?,?)').run(
+                    n._id, n.userId, n.text, n.link||'', n.read?1:0, n.createdAt||new Date().toISOString());
+        }
+    }
 }
 
 module.exports = { query, uuidv4, init };

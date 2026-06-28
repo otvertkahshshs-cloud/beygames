@@ -5,7 +5,7 @@
 <%- include('../partials/header') %>
 <div class="container main-wrap">
   <div class="form-box">
-    <h2>⚙ Настройки профиля</h2>
+    <h2><i class="fa-solid fa-gear"></i> Настройки профиля</h2>
     <% if (error) { %><div class="alert-error"><%= error %></div><% } %>
     <% if (success) { %><div class="alert-success"><%= success %></div><% } %>
     <form method="POST" action="/user/settings/edit" enctype="multipart/form-data">
