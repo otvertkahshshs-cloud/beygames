@@ -19,10 +19,11 @@ router.post('/settings/edit', auth, uploadAvatar.single('avatar'), async (req, r
     const rows = await query('SELECT * FROM users WHERE id=$1', [req.session.user.id]);
     const user = rows[0];
 
-    // Если загружен новый аватар — берём URL от Cloudinary, иначе оставляем старый
+    // Если загружен новый аватар — берём локальный URL
     let avatarPath = user.avatar;
-    if (req.file && req.file.path) {
-        avatarPath = req.file.path; // multer-storage-cloudinary кладёт secure_url в file.path
+    if (req.file) {
+        // req.file.path — абсолютный путь, берём только часть после public/
+        avatarPath = '/uploads/avatars/' + req.file.filename;
     }
 
     if (new_password) {

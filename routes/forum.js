@@ -78,15 +78,15 @@ router.post('/section/:id/new', auth, uploadThreadFields, async (req, res) => {
         const rawFile  = req.files && req.files['file']  ? req.files['file'][0]  : null;
         const rawImage = req.files && req.files['image'] ? req.files['image'][0] : null;
 
-        // multer-storage-cloudinary загружает файлы стримингом, secure_url в file.path
-        const finalImage = rawImage ? rawImage.path : null;
+        // Файлы уже сохранены на диск multer-ом, берём локальный URL
+        const finalImage = rawImage ? '/uploads/threads/' + rawImage.filename : null;
 
         let attachment = null;
         if (rawFile) {
             const ext = rawFile.originalname.split('.').pop().toLowerCase();
             attachment = {
                 filename: rawFile.originalname,
-                path: rawFile.path,
+                path: '/uploads/files/' + rawFile.filename,
                 size: rawFile.size,
                 ext,
             };
@@ -112,14 +112,14 @@ router.post('/thread/:id/reply', auth, uploadThreadFields, async (req, res) => {
         const thread = rows[0];
         const user = req.session.user;
 
-        // multer-storage-cloudinary загружает файлы стримингом, secure_url в file.path
+        // Файлы уже сохранены на диск multer-ом, берём локальный URL
         let attachment = null;
         const rawFile = req.files && req.files['file'] ? req.files['file'][0] : null;
         if (rawFile) {
             const ext = rawFile.originalname.split('.').pop().toLowerCase();
             attachment = {
                 filename: rawFile.originalname,
-                path: rawFile.path,
+                path: '/uploads/files/' + rawFile.filename,
                 size: rawFile.size,
                 ext,
             };
