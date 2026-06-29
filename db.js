@@ -129,8 +129,23 @@ async function init() {
 
     migrateFromJson();
 
-    const cats = db.prepare('SELECT id FROM cats LIMIT 1').get();
-    if (cats) return;
+    // Принудительно обновляем категории и разделы до актуального состояния
+    syncCatsAndSections();
+
+    const adminUser = db.prepare("SELECT id FROM users WHERE role='admin' LIMIT 1").get();
+    if (!adminUser) {
+        const hash = bcrypt.hashSync('admin123', 10);
+        db.prepare('INSERT INTO users(id,username,email,password,role,rank) VALUES(?,?,?,?,?,?)').run(uuidv4(),'admin','admin@forum.ru',hash,'admin','Администратор');
+        console.log('DB seeded. admin / admin123');
+    }
+}
+
+function syncCatsAndSections() {
+    // Удаляем все категории и разделы, пересоздаём нужные
+    db.pragma('foreign_keys = OFF');
+    db.prepare('DELETE FROM sections').run();
+    db.prepare('DELETE FROM cats').run();
+    db.pragma('foreign_keys = ON');
 
     const c1 = uuidv4();
     db.prepare('INSERT INTO cats VALUES (?,?,?,?,?)').run(c1,'Читы и Хаки','Всё для игровых читов','<i class="fa-solid fa-crosshairs"></i>',1);
@@ -141,9 +156,7 @@ async function init() {
     for (const s of secs)
         db.prepare('INSERT INTO sections(id,cat_id,name,description,icon,sort,threads_count,posts_count) VALUES(?,?,?,?,?,?,0,0)').run(...s);
 
-    const hash = bcrypt.hashSync('admin123', 10);
-    db.prepare('INSERT INTO users(id,username,email,password,role,rank) VALUES(?,?,?,?,?,?)').run(uuidv4(),'admin','admin@forum.ru',hash,'admin','Администратор');
-    console.log('DB seeded. admin / admin123');
+    console.log('Cats & sections synced.');
 }
 
 function migrateFromJson() {
