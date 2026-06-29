@@ -8,28 +8,7 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Хранилище для изображений постов/тредов
-const threadImageStorage = new CloudinaryStorage({
-    cloudinary,
-    params: {
-        folder: 'forum/threads',
-        allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
-        resource_type: 'image',
-    },
-});
-
-// Хранилище для вложений (файлы: zip, exe, etc.)
-const threadFileStorage = new CloudinaryStorage({
-    cloudinary,
-    params: (req, file) => ({
-        folder: 'forum/attachments',
-        resource_type: 'raw',
-        public_id: Date.now() + '_' + file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_'),
-        use_filename: false,
-    }),
-});
-
-// Хранилище для аватаров
+// Хранилище для аватаров — стриминг напрямую в Cloudinary
 const avatarStorage = new CloudinaryStorage({
     cloudinary,
     params: (req, file) => ({
@@ -42,31 +21,38 @@ const avatarStorage = new CloudinaryStorage({
     }),
 });
 
-const uploadThreadImage = multer({
-    storage: threadImageStorage,
+// Хранилище для вложений тредов — стриминг напрямую в Cloudinary
+// resource_type: 'auto' — Cloudinary сам определяет image/video/raw
+const threadAttachmentStorage = new CloudinaryStorage({
+    cloudinary,
+    params: (req, file) => {
+        const safeName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(file.originalname);
+        return {
+            folder: isImage ? 'forum/threads' : 'forum/attachments',
+            resource_type: 'auto',
+            public_id: Date.now() + '_' + safeName,
+            use_filename: false,
+            overwrite: false,
+        };
+    },
+});
+
+// uploadAvatar — аватары до 10 MB, стриминг
+const uploadAvatar = multer({
+    storage: avatarStorage,
     limits: { fileSize: 10 * 1024 * 1024 },
 });
 
-const uploadThreadFile = multer({
-    storage: threadFileStorage,
-    limits: { fileSize: 50 * 1024 * 1024 },
-});
-
-// Универсальный upload для тредов: fields image + file
-// Т.к. multer-storage-cloudinary не поддерживает разные storage для одного upload.fields,
-// используем memoryStorage + ручную загрузку в cloudinary
-const memStorage = multer.memoryStorage();
+// uploadThreadFields — вложения и изображения тредов до 100 MB, стриминг
+// Используем один storage с resource_type: auto
 const uploadThreadFields = multer({
-    storage: memStorage,
-    limits: { fileSize: 50 * 1024 * 1024 },
+    storage: threadAttachmentStorage,
+    limits: { fileSize: 100 * 1024 * 1024 },
 }).fields([{ name: 'file', maxCount: 1 }, { name: 'image', maxCount: 1 }]);
 
-const uploadAvatar = multer({
-    storage: avatarStorage,
-    limits: { fileSize: 5 * 1024 * 1024 },
-});
-
-// Загрузить буфер в cloudinary вручную
+// Загрузить буфер в cloudinary вручную (используется в forum routes для совместимости)
+// Теперь не нужна при стриминге, но оставляем для обратной совместимости
 function uploadBuffer(buffer, options) {
     return new Promise((resolve, reject) => {
         cloudinary.uploader.upload_stream(options, (err, result) => {

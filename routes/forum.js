@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { query, uuidv4 } = require('../db');
 const { getRank } = require('../utils');
-const { uploadThreadFields, uploadBuffer } = require('../cloudinary');
+const { uploadThreadFields } = require('../cloudinary');
 
 function auth(req, res, next) {
     if (!req.session.user) return res.redirect('/auth/login');
@@ -78,30 +78,15 @@ router.post('/section/:id/new', auth, uploadThreadFields, async (req, res) => {
         const rawFile  = req.files && req.files['file']  ? req.files['file'][0]  : null;
         const rawImage = req.files && req.files['image'] ? req.files['image'][0] : null;
 
-        // Загружаем изображение в Cloudinary
-        let finalImage = null;
-        if (rawImage) {
-            const result = await uploadBuffer(rawImage.buffer, {
-                folder: 'forum/threads',
-                resource_type: 'image',
-            });
-            finalImage = result.secure_url;
-        }
+        // multer-storage-cloudinary загружает файлы стримингом, secure_url в file.path
+        const finalImage = rawImage ? rawImage.path : null;
 
-        // Загружаем вложение в Cloudinary как raw
         let attachment = null;
         if (rawFile) {
-            const safeName = rawFile.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
-            const result = await uploadBuffer(rawFile.buffer, {
-                folder: 'forum/attachments',
-                resource_type: 'raw',
-                public_id: Date.now() + '_' + safeName,
-                use_filename: false,
-            });
             const ext = rawFile.originalname.split('.').pop().toLowerCase();
             attachment = {
                 filename: rawFile.originalname,
-                path: result.secure_url,
+                path: rawFile.path,
                 size: rawFile.size,
                 ext,
             };
@@ -127,21 +112,14 @@ router.post('/thread/:id/reply', auth, uploadThreadFields, async (req, res) => {
         const thread = rows[0];
         const user = req.session.user;
 
-        // Загружаем вложение в Cloudinary если есть
+        // multer-storage-cloudinary загружает файлы стримингом, secure_url в file.path
         let attachment = null;
         const rawFile = req.files && req.files['file'] ? req.files['file'][0] : null;
         if (rawFile) {
-            const safeName = rawFile.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
-            const result = await uploadBuffer(rawFile.buffer, {
-                folder: 'forum/attachments',
-                resource_type: 'raw',
-                public_id: Date.now() + '_' + safeName,
-                use_filename: false,
-            });
             const ext = rawFile.originalname.split('.').pop().toLowerCase();
             attachment = {
                 filename: rawFile.originalname,
-                path: result.secure_url,
+                path: rawFile.path,
                 size: rawFile.size,
                 ext,
             };
