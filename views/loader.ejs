@@ -37,7 +37,7 @@
       <div class="loader-info-item">Статус<span style="color:#7eca2a">ONLINE</span></div>
     </div>
 
-    <% if (loaderFile) { %>
+    <% if (typeof loaderFile !== 'undefined' && loaderFile) { %>
       <a href="/loader/download" class="btn-download">
         <i class="fa-solid fa-file-arrow-down"></i> Скачать Loader
       </a>

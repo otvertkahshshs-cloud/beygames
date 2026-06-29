@@ -2,16 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { query } = require('../db');
 const bcrypt = require('bcryptjs');
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
-
-if (!fs.existsSync('./public/uploads')) fs.mkdirSync('./public/uploads', { recursive: true });
-const storage = multer.diskStorage({
-    destination: './public/uploads/',
-    filename: (req, file, cb) => cb(null, 'avatar_' + req.session.user.id + path.extname(file.originalname))
-});
-const upload = multer({ storage, limits: { fileSize: 2*1024*1024 } });
+const { uploadAvatar } = require('../cloudinary');
 
 function auth(req, res, next) {
     if (!req.session.user) return res.redirect('/auth/login');
@@ -23,12 +14,17 @@ router.get('/settings/edit', auth, async (req, res) => {
     res.render('user/settings', { user: rows[0], error: null, success: null });
 });
 
-router.post('/settings/edit', auth, upload.single('avatar'), async (req, res) => {
+router.post('/settings/edit', auth, uploadAvatar.single('avatar'), async (req, res) => {
     const { signature, old_password, new_password } = req.body;
     const rows = await query('SELECT * FROM users WHERE id=$1', [req.session.user.id]);
     const user = rows[0];
+
+    // Если загружен новый аватар — берём URL от Cloudinary, иначе оставляем старый
     let avatarPath = user.avatar;
-    if (req.file) avatarPath = '/uploads/' + req.file.filename;
+    if (req.file && req.file.path) {
+        avatarPath = req.file.path; // multer-storage-cloudinary кладёт secure_url в file.path
+    }
+
     if (new_password) {
         if (!bcrypt.compareSync(old_password, user.password))
             return res.render('user/settings', { user, error: 'Неверный текущий пароль', success: null });
@@ -37,6 +33,7 @@ router.post('/settings/edit', auth, upload.single('avatar'), async (req, res) =>
         const hash = bcrypt.hashSync(new_password, 10);
         await query('UPDATE users SET password=$1 WHERE id=$2', [hash, user.id]);
     }
+
     await query('UPDATE users SET signature=$1, avatar=$2 WHERE id=$3', [signature||'', avatarPath, user.id]);
     req.session.user.avatar = avatarPath;
     const updated = await query('SELECT * FROM users WHERE id=$1', [user.id]);

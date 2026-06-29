@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
-<head><meta charset="UTF-8"><title><%= thread.title %> — GameForum</title><link rel="stylesheet" href="/css/style.css"></head>
+<head><meta charset="UTF-8"><title><%= thread.title %> — Dealerhook.cc</title><link rel="stylesheet" href="/css/style.css"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"></head>
 <body>
 <%- include('../partials/header') %>
 <div class="container main-wrap">
@@ -8,8 +8,8 @@
   <div class="thread-header">
     <h1 class="page-title"><%= thread.title %></h1>
     <div class="thread-meta-top">
-      <span>👁 <%= thread.views %></span>
-      <span>💬 <%= thread.replies %></span>
+      <span><i class="fa-solid fa-eye"></i> <%= thread.views %></span>
+      <span><i class="fa-solid fa-comment"></i> <%= thread.replies %></span>
       <% if (thread.pinned) { %><span class="badge-pin">📌 Закреплено</span><% } %>
       <% if (thread.locked) { %><span class="badge-lock">🔒 Закрыто</span><% } %>
       <% if (user && user.role === 'admin') { %>
@@ -43,20 +43,21 @@
         <% } %>
         <% if (p.attachment) { %>
         <div class="post-attachment">
-          <div class="attach-header">📎 Вложения</div>
+          <div class="attach-header"><i class="fa-solid fa-file"></i> Вложения</div>
           <a href="<%= p.attachment.path %>" class="attach-file" download>
             <div class="attach-icon">
-              <% if (['zip','rar','7z'].includes(p.attachment.ext)) { %>🗜️
-              <% } else if (['jpg','jpeg','png','gif','webp'].includes(p.attachment.ext)) { %>🖼️
-              <% } else if (['mp4','avi','mkv'].includes(p.attachment.ext)) { %>🎬
-              <% } else if (['mp3','wav','ogg'].includes(p.attachment.ext)) { %>🎵
-              <% } else if (['pdf'].includes(p.attachment.ext)) { %>📄
-              <% } else if (['exe','dll'].includes(p.attachment.ext)) { %>⚙️
+              <% const _ext = (p.attachment.ext || '').toLowerCase(); %>
+              <% if (['zip','rar','7z'].includes(_ext)) { %>🗜️
+              <% } else if (['jpg','jpeg','png','gif','webp'].includes(_ext)) { %>🖼️
+              <% } else if (['mp4','avi','mkv'].includes(_ext)) { %>🎬
+              <% } else if (['mp3','wav','ogg'].includes(_ext)) { %>🎵
+              <% } else if (['pdf'].includes(_ext)) { %>📄
+              <% } else if (['exe','dll'].includes(_ext)) { %>⚙️
               <% } else { %>📁<% } %>
             </div>
             <div class="attach-info">
-              <div class="attach-name"><%= p.attachment.filename %></div>
-              <div class="attach-meta"><%= p.attachment.ext.toUpperCase() %> · <%= (p.attachment.size / 1024).toFixed(1) %> KB</div>
+              <div class="attach-name"><%= p.attachment.filename || '—' %></div>
+              <div class="attach-meta"><%= _ext ? _ext.toUpperCase() : '?' %> · <%= (p.attachment.size / 1024).toFixed(1) %> KB</div>
             </div>
           </a>
         </div>
@@ -64,7 +65,7 @@
         <% if (p.signature) { %><div class="post-signature"><%= p.signature %></div><% } %>
         <div class="post-actions">
           <button class="like-btn <%= likedPosts.has(p._id) ? 'liked' : '' %>" data-id="<%= p._id %>">
-            👍 <span class="like-count"><%= p.likes %></span>
+            <i class="fa-solid fa-thumbs-up"></i> <span class="like-count"><%= p.likes %></span>
           </button>
         </div>
       </div>
@@ -87,7 +88,7 @@
       <textarea name="content" class="reply-textarea" rows="6" placeholder="Ваш ответ..." required></textarea>
       <div class="attach-row">
         <label class="attach-label">
-          📎 Прикрепить файл
+          <i class="fa-solid fa-file"></i> Прикрепить файл
           <input type="file" name="file" class="attach-input">
         </label>
         <span class="attach-hint">Макс. 10MB</span>

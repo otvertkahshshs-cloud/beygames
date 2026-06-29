@@ -387,6 +387,7 @@ a:hover { color: #fff; }
 .role-badge { padding: 2px 7px; border-radius: 2px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
 .role-admin { background: rgba(149,184,6,.2); color: var(--accent); }
 .role-user  { background: var(--bg4); color: var(--text-dim); }
+.role-benefactor { background: rgba(33,150,243,.2); color: #2196f3; }
 .badge-ban { color: var(--red); font-size: 11px; }
 .badge-ok  { color: var(--green); font-size: 11px; }
 
@@ -452,6 +453,7 @@ a:hover { color: #fff; }
 .rank-legend    { background: rgba(200,50,255,.2); color: #d06fff; border: 1px solid #a030dd; }
 .rank-admin     { background: rgba(255,50,50,.2); color: #f66; border: 1px solid #c00; }
 .rank-moderator { background: rgba(0,200,180,.2); color: #0dd; border: 1px solid #0aa; }
+.rank-benefactor { background: rgba(33,150,243,.2); color: #2196f3; border: 1px solid #1565c0; }
 
 /* NOTIFICATIONS */
 .notif-bell { position: relative; cursor: pointer; color: var(--text-dim); font-size: 16px; padding: 0 8px; }

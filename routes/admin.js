@@ -15,7 +15,7 @@ router.get('/', admin, async (req, res) => {
     const allThreads = await query(`SELECT t.*, u.username, s.name as section_name FROM threads t JOIN users u ON t.user_id=u.id JOIN sections s ON t.section_id=s.id WHERE t.status='approved' ORDER BY t.created_at DESC LIMIT 30`);
     for (const t of [...pending, ...allThreads]) t._id = t.id;
     for (const u of users) u._id = u.id;
-    res.render('admin/index', { stats, users, pending, allThreads });
+    res.render('admin/index', { stats, users, pending, allThreads, user: req.session.user });
 });
 
 router.post('/approve-thread/:id', admin, async (req, res) => {
@@ -56,7 +56,7 @@ router.post('/unban/:id', admin, async (req, res) => {
 
 router.post('/set-role/:id', admin, async (req, res) => {
     const { role } = req.body;
-    if (['user','moderator','admin'].includes(role))
+    if (['user','moderator','admin','benefactor'].includes(role))
         await query('UPDATE users SET role=$1 WHERE id=$2', [role, req.params.id]);
     res.redirect('/admin');
 });

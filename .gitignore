@@ -3,5 +3,5 @@ data/forum.db
 data/forum.db-wal
 data/forum.db-shm
 data/loader/
-public/uploads/threads/
-public/uploads/avatar_*
+public/uploads/
+.env

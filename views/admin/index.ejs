@@ -5,19 +5,19 @@
 <%- include('../partials/header') %>
 <div class="container main-wrap">
   <div class="admin-wrap">
-    <h1 class="page-title" style="margin-bottom:20px">⚙ Админ панель</h1>
+    <h1 class="page-title" style="margin-bottom:20px"><i class="fa-solid fa-gear"></i> Админ панель</h1>
 
     <div class="admin-stats">
-      <div class="astat">👤 Пользователей: <b><%= stats.users %></b></div>
-      <div class="astat">💬 Тем: <b><%= stats.threads %></b></div>
-      <div class="astat">📝 Постов: <b><%= stats.posts %></b></div>
+      <div class="astat"><i class="fa-solid fa-user"></i> Пользователей: <b><%= stats.users %></b></div>
+      <div class="astat"><i class="fa-solid fa-comments"></i> Тем: <b><%= stats.threads %></b></div>
+      <div class="astat"><i class="fa-solid fa-file-lines"></i> Постов: <b><%= stats.posts %></b></div>
       <div class="astat" style="border-color:<%= pending.length > 0 ? '#ffc107' : '' %>">
-        ⏳ На модерации: <b style="color:<%= pending.length > 0 ? '#ffc107' : 'var(--accent)' %>"><%= pending.length %></b>
+        <i class="fa-solid fa-clock"></i> На модерации: <b style="color:<%= pending.length > 0 ? '#ffc107' : 'var(--accent)' %>"><%= pending.length %></b>
       </div>
     </div>
 
     <% if (pending.length > 0) { %>
-    <h2 style="margin-bottom:12px;color:#ffc107">⏳ Ожидают одобрения</h2>
+    <h2 style="margin-bottom:12px;color:#ffc107"><i class="fa-solid fa-clock"></i> Ожидают одобрения</h2>
     <table class="admin-table" style="margin-bottom:28px">
       <thead><tr><th>Тема</th><th>Автор</th><th>Раздел</th><th>Дата</th><th>Действия</th></tr></thead>
       <tbody>
@@ -41,7 +41,7 @@
     </table>
     <% } %>
 
-    <h2 style="margin-bottom:12px">📋 Все темы</h2>
+    <h2 style="margin-bottom:12px"><i class="fa-solid fa-list"></i> Все темы</h2>
     <table class="admin-table" style="margin-bottom:28px">
       <thead><tr><th>Тема</th><th>Автор</th><th>Раздел</th><th>Просмотры</th><th>Удалить</th></tr></thead>
       <tbody>
@@ -61,7 +61,7 @@
       </tbody>
     </table>
 
-    <h2 style="margin-bottom:12px">👤 Пользователи</h2>
+    <h2 style="margin-bottom:12px"><i class="fa-solid fa-users"></i> Пользователи</h2>
     <table class="admin-table">
       <thead><tr><th>Логин</th><th>Email</th><th>Роль</th><th>Постов</th><th>Статус</th><th>Действия</th></tr></thead>
       <tbody>
@@ -76,9 +76,10 @@
           <% if (u.role !== 'admin' || user.username === 'admin') { %>
           <form method="POST" action="/admin/set-role/<%= u._id %>" style="display:inline;margin-right:4px">
             <select name="role" class="form-input" style="width:110px;display:inline;padding:3px 6px;font-size:11px">
-              <option value="user"      <%= u.role==='user'      ? 'selected' : '' %>>user</option>
-              <option value="moderator" <%= u.role==='moderator' ? 'selected' : '' %>>moderator</option>
-              <option value="admin"     <%= u.role==='admin'     ? 'selected' : '' %>>admin</option>
+              <option value="user"        <%= u.role==='user'        ? 'selected' : '' %>>user</option>
+              <option value="moderator"   <%= u.role==='moderator'   ? 'selected' : '' %>>moderator</option>
+              <option value="benefactor"  <%= u.role==='benefactor'  ? 'selected' : '' %>>benefactor</option>
+              <option value="admin"       <%= u.role==='admin'       ? 'selected' : '' %>>admin</option>
             </select>
             <button class="btn-success" style="padding:3px 8px;font-size:11px">✓</button>
           </form>

@@ -2,16 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { query, uuidv4 } = require('../db');
 const { getRank } = require('../utils');
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
-
-if (!fs.existsSync('./public/uploads/threads')) fs.mkdirSync('./public/uploads/threads', { recursive: true });
-const storage = multer.diskStorage({
-    destination: './public/uploads/threads/',
-    filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
-});
-const upload = multer({ storage, limits: { fileSize: 10*1024*1024 } });
+const { uploadThreadFields, uploadBuffer } = require('../cloudinary');
 
 function auth(req, res, next) {
     if (!req.session.user) return res.redirect('/auth/login');
@@ -54,6 +45,9 @@ router.get('/thread/:id', async (req, res) => {
             p._id = p.id;
             const r = getRank({ role: p.role, postsCount: p.posts_count });
             p.rank = r.name; p.rankCss = r.css;
+            if (p.attachment && typeof p.attachment === 'string') {
+                try { p.attachment = JSON.parse(p.attachment); } catch { p.attachment = null; }
+            }
         }
         const likedPosts = new Set();
         if (req.session.user) {
@@ -71,7 +65,7 @@ router.get('/section/:id/new', auth, async (req, res) => {
     res.render('forum/new_thread', { section, error: null });
 });
 
-router.post('/section/:id/new', auth, upload.fields([{name:'file',maxCount:1},{name:'image',maxCount:1}]), async (req, res) => {
+router.post('/section/:id/new', auth, uploadThreadFields, async (req, res) => {
     try {
         const { title, content } = req.body;
         const rows = await query('SELECT * FROM sections WHERE id=$1', [req.params.id]);
@@ -79,12 +73,40 @@ router.post('/section/:id/new', auth, upload.fields([{name:'file',maxCount:1},{n
         const section = rows[0]; section._id = section.id;
         if (!title||!content||title.trim().length<1||content.trim().length<1)
             return res.render('forum/new_thread', { section, error: 'Заполните заголовок и текст' });
+
         const user = req.session.user;
-        const uploadedFile = req.files&&req.files['file'] ? req.files['file'][0] : null;
-        const uploadedImage = req.files&&req.files['image'] ? req.files['image'][0] : null;
+        const rawFile  = req.files && req.files['file']  ? req.files['file'][0]  : null;
+        const rawImage = req.files && req.files['image'] ? req.files['image'][0] : null;
+
+        // Загружаем изображение в Cloudinary
+        let finalImage = null;
+        if (rawImage) {
+            const result = await uploadBuffer(rawImage.buffer, {
+                folder: 'forum/threads',
+                resource_type: 'image',
+            });
+            finalImage = result.secure_url;
+        }
+
+        // Загружаем вложение в Cloudinary как raw
         let attachment = null;
-        if (uploadedFile) attachment = { filename: uploadedFile.originalname, path: '/uploads/threads/'+uploadedFile.filename, size: uploadedFile.size, ext: uploadedFile.originalname.split('.').pop().toLowerCase() };
-        const finalImage = uploadedImage ? '/uploads/threads/'+uploadedImage.filename : null;
+        if (rawFile) {
+            const safeName = rawFile.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+            const result = await uploadBuffer(rawFile.buffer, {
+                folder: 'forum/attachments',
+                resource_type: 'raw',
+                public_id: Date.now() + '_' + safeName,
+                use_filename: false,
+            });
+            const ext = rawFile.originalname.split('.').pop().toLowerCase();
+            attachment = {
+                filename: rawFile.originalname,
+                path: result.secure_url,
+                size: rawFile.size,
+                ext,
+            };
+        }
+
         const tid = uuidv4();
         await query('INSERT INTO threads(id,section_id,user_id,title,status,last_post_user) VALUES($1,$2,$3,$4,$5,$6)',
             [tid, req.params.id, user.id, title.trim(), 'pending', user.username]);
@@ -96,7 +118,7 @@ router.post('/section/:id/new', auth, upload.fields([{name:'file',maxCount:1},{n
     } catch(e) { console.error(e); res.status(500).send('Ошибка: '+e.message); }
 });
 
-router.post('/thread/:id/reply', auth, upload.single('file'), async (req, res) => {
+router.post('/thread/:id/reply', auth, uploadThreadFields, async (req, res) => {
     try {
         const { content } = req.body;
         if (!content||content.trim().length<1) return res.redirect('/forum/thread/'+req.params.id);
@@ -104,8 +126,27 @@ router.post('/thread/:id/reply', auth, upload.single('file'), async (req, res) =
         if (!rows.length||rows[0].locked) return res.redirect('/forum/thread/'+req.params.id);
         const thread = rows[0];
         const user = req.session.user;
+
+        // Загружаем вложение в Cloudinary если есть
         let attachment = null;
-        if (req.file) attachment = { filename: req.file.originalname, path: '/uploads/threads/'+req.file.filename, size: req.file.size, ext: req.file.originalname.split('.').pop().toLowerCase() };
+        const rawFile = req.files && req.files['file'] ? req.files['file'][0] : null;
+        if (rawFile) {
+            const safeName = rawFile.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+            const result = await uploadBuffer(rawFile.buffer, {
+                folder: 'forum/attachments',
+                resource_type: 'raw',
+                public_id: Date.now() + '_' + safeName,
+                use_filename: false,
+            });
+            const ext = rawFile.originalname.split('.').pop().toLowerCase();
+            attachment = {
+                filename: rawFile.originalname,
+                path: result.secure_url,
+                size: rawFile.size,
+                ext,
+            };
+        }
+
         await query('INSERT INTO posts(id,thread_id,user_id,content,attachment) VALUES($1,$2,$3,$4,$5)',
             [uuidv4(), req.params.id, user.id, content.trim(), attachment ? JSON.stringify(attachment) : null]);
         await query('UPDATE threads SET replies=replies+1, last_post_at=NOW(), last_post_user=$1 WHERE id=$2', [user.username, req.params.id]);

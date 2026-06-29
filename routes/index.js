@@ -22,7 +22,8 @@ router.get('/', async (req, res) => {
             WHERE t.status='approved' ORDER BY t.last_post_at DESC LIMIT 10
         `);
         for (const t of latest) { t._id = t.id; t.sectionName = t.section_name; }
-        res.render('index', { categories: cats, stats, latest_threads: latest });
+        const onlineUsers = Array.from(req.app.locals.onlineMap.values());
+        res.render('index', { categories: cats, stats, latest_threads: latest, onlineUsers });
     } catch(e) { console.error(e); res.status(500).send('Ошибка: ' + e.message); }
 });
 

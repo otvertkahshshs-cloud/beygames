@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DealerHook — Форум</title>
+<title>Dealerhook.cc</title>
 <link rel="stylesheet" href="/css/style.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
@@ -82,13 +82,27 @@
 
     <div class="sidebar">
       <div class="sidebar-block">
-        <div class="sb-title">📊 Статистика</div>
+        <div class="sb-title"><i class="fa-solid fa-chart-bar"></i> Статистика</div>
         <div class="sb-stat"><span>Пользователей:</span><b><%= stats.users %></b></div>
         <div class="sb-stat"><span>Тем:</span><b><%= stats.threads %></b></div>
         <div class="sb-stat"><span>Постов:</span><b><%= stats.posts %></b></div>
       </div>
       <div class="sidebar-block">
-        <div class="sb-title">🕐 Последние темы</div>
+        <div class="sb-title"><i class="fa-solid fa-circle" style="color:#4caf50;font-size:.6rem;vertical-align:middle"></i> В сети (<%= onlineUsers.length %>)</div>
+        <% if (onlineUsers.length === 0) { %>
+        <div style="font-size:.8rem;color:#888;padding:4px 0">Никого нет онлайн</div>
+        <% } else { %>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;padding:4px 0">
+          <% for (const u of onlineUsers) { %>
+          <a href="/user/<%= u.username %>" title="<%= u.username %>" style="display:inline-block">
+            <img src="<%= u.avatar %>" onerror="this.src='/img/default_avatar.png'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid #4caf50">
+          </a>
+          <% } %>
+        </div>
+        <% } %>
+      </div>
+      <div class="sidebar-block">
+        <div class="sb-title"><i class="fa-solid fa-clock"></i> Последние темы</div>
         <% for (const t of latest_threads) { %>
         <div class="sb-thread">
           <img src="<%= t.avatar %>" class="sb-avatar" onerror="this.src='/img/default_avatar.png'">

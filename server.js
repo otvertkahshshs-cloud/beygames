@@ -18,8 +18,21 @@ app.use(session({
     cookie: { maxAge: 7 * 24 * 60 * 60 * 1000 }
 }));
 
+// Online users tracking (in-memory, 5 min TTL)
+const onlineMap = new Map();
+app.locals.onlineMap = onlineMap;
+
 app.use(async (req, res, next) => {
     res.locals.user = req.session.user || null;
+    if (req.session.user) {
+        onlineMap.set(req.session.user.id, {
+            username: req.session.user.username,
+            avatar: req.session.user.avatar || '/img/default_avatar.png',
+            lastSeen: Date.now()
+        });
+    }
+    const cutoff = Date.now() - 5 * 60 * 1000;
+    for (const [id, u] of onlineMap) { if (u.lastSeen < cutoff) onlineMap.delete(id); }
     if (req.session.user) {
         try {
             const { query } = require('./db');
