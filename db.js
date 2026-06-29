@@ -125,6 +125,14 @@ async function init() {
             message TEXT NOT NULL,
             created_at TEXT DEFAULT (datetime('now'))
         );
+        CREATE TABLE IF NOT EXISTS chat_messages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT NOT NULL,
+            username TEXT NOT NULL,
+            avatar TEXT DEFAULT '/img/default_avatar.png',
+            message TEXT NOT NULL,
+            created_at TEXT DEFAULT (datetime('now'))
+        );
     `);
 
     migrateFromJson();
