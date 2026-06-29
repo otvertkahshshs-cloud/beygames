@@ -48,16 +48,68 @@
     <% if (user && user.username === 'admin') { %>
     <div class="upload-section">
       <p style="color:#666;font-size:.8rem;margin-bottom:12px">— Панель администратора —</p>
-      <form action="/loader/upload" method="POST" enctype="multipart/form-data">
+      <form id="loaderForm" action="/loader/upload" method="POST" enctype="multipart/form-data">
         <label>Загрузить новый файл лоадера:</label>
-        <input type="file" name="loader" required>
+        <input type="file" name="loader" required id="loaderFile">
         <br>
         <label style="margin-top:10px">Версия:</label>
         <input type="text" name="version" value="<%= loaderVersion %>" style="background:var(--bg3);border:1px solid var(--border);color:var(--text,#ccc);padding:5px 8px;border-radius:3px;font-size:.85rem">
         <br>
-        <button type="submit" class="btn-primary" style="margin-top:10px">Загрузить</button>
+        <button type="submit" class="btn-primary" style="margin-top:10px" id="loaderBtn">Загрузить</button>
       </form>
+      <div id="uploadProgress" style="display:none;margin-top:14px">
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:4px;overflow:hidden;height:18px">
+          <div id="progressBar" style="height:100%;background:var(--accent);width:0%;transition:width .2s"></div>
+        </div>
+        <p id="progressText" style="color:#aaa;font-size:.82rem;margin-top:6px">Загрузка: 0%</p>
+      </div>
     </div>
+    <script>
+    document.getElementById('loaderForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const form = this;
+      const btn = document.getElementById('loaderBtn');
+      const progress = document.getElementById('uploadProgress');
+      const bar = document.getElementById('progressBar');
+      const text = document.getElementById('progressText');
+      const data = new FormData(form);
+
+      btn.disabled = true;
+      btn.textContent = 'Загружается...';
+      progress.style.display = 'block';
+
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/loader/upload');
+
+      xhr.upload.addEventListener('progress', function(e) {
+        if (e.lengthComputable) {
+          const pct = Math.round(e.loaded / e.total * 100);
+          bar.style.width = pct + '%';
+          text.textContent = 'Загрузка: ' + pct + '% (' + (e.loaded / 1024 / 1024).toFixed(1) + ' MB / ' + (e.total / 1024 / 1024).toFixed(1) + ' MB)';
+        }
+      });
+
+      xhr.addEventListener('load', function() {
+        if (xhr.status === 200 || xhr.status === 302) {
+          text.textContent = 'Готово! Перезагрузка...';
+          bar.style.width = '100%';
+          setTimeout(() => window.location.reload(), 800);
+        } else {
+          text.textContent = 'Ошибка: ' + xhr.status;
+          btn.disabled = false;
+          btn.textContent = 'Загрузить';
+        }
+      });
+
+      xhr.addEventListener('error', function() {
+        text.textContent = 'Ошибка соединения';
+        btn.disabled = false;
+        btn.textContent = 'Загрузить';
+      });
+
+      xhr.send(data);
+    });
+    </script>
     <% } %>
   </div>
 </div>

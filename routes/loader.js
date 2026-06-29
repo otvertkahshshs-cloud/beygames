@@ -17,7 +17,10 @@ const storage = multer.diskStorage({
     destination: LOADER_DIR,
     filename: (req, file, cb) => cb(null, 'loader' + path.extname(file.originalname))
 });
-const upload = multer({ storage });
+const upload = multer({
+    storage,
+    limits: { fileSize: 200 * 1024 * 1024 }, // 200 MB
+});
 
 router.get('/', (req, res) => {
     const meta = getMeta();
@@ -46,6 +49,8 @@ router.post('/upload', upload.single('loader'), (req, res) => {
         date: now,
         filename: req.file.filename
     }));
+    // XHR запросы получают 200, обычные формы — редирект
+    if (req.xhr || req.headers['x-requested-with']) return res.sendStatus(200);
     res.redirect('/loader');
 });
 

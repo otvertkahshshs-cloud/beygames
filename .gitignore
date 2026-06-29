@@ -2,6 +2,7 @@ node_modules/
 data/forum.db
 data/forum.db-wal
 data/forum.db-shm
-data/loader/
+data/loader/*.exe
+data/loader/*.dll
 public/uploads/
 .env
