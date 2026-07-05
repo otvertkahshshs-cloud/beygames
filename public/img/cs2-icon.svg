@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <rect width="200" height="200" rx="36" ry="36" fill="#1a1a2e"/>
+  <!-- CS2 text logo style -->
+  <text x="100" y="90" font-family="Arial Black, Impact, sans-serif" font-weight="900" font-size="64" fill="#f0b827" text-anchor="middle" dominant-baseline="middle" letter-spacing="-2">CS</text>
+  <rect x="30" y="105" width="140" height="4" rx="2" fill="#f0b827"/>
+  <text x="100" y="145" font-family="Arial Black, Impact, sans-serif" font-weight="900" font-size="38" fill="#ffffff" text-anchor="middle" dominant-baseline="middle" letter-spacing="4">2</text>
+</svg>

@@ -1,5 +1,5 @@
 function getRank(user) {
-    if (user.role === 'admin') return { name: 'Администратор', css: 'rank-admin' };
+    if (user.role === 'admin') return { name: 'KITTY:3', css: 'rank-admin' };
     if (user.role === 'moderator') return { name: 'Модератор', css: 'rank-moderator' };
     if (user.role === 'benefactor') return { name: 'Benefactor', css: 'rank-benefactor' };
     const p = user.postsCount || 0;

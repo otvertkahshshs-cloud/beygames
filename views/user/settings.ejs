@@ -1,6 +1,6 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
-<head><meta charset="UTF-8"><title>Настройки — Dealerhook.cc</title><link rel="stylesheet" href="/css/style.css"></head>
+<head><meta charset="UTF-8"><title>Настройки · Dealerhook.cc</title><link rel="stylesheet" href="/css/style.css"></head>
 <body>
 <%- include('../partials/header') %>
 <div class="container main-wrap">
@@ -9,11 +9,28 @@
     <% if (error) { %><div class="alert-error"><%= error %></div><% } %>
     <% if (success) { %><div class="alert-success"><%= success %></div><% } %>
     <form method="POST" action="/user/settings/edit" enctype="multipart/form-data">
+
       <div class="form-group">
-        <label>Аватар (макс. 2MB)</label>
-        <img src="<%= user.avatar %>" class="settings-avatar" onerror="this.src='/img/default_avatar.png'">
-        <input type="file" name="avatar" class="form-input" accept="image/*">
+        <label>Аватар (макс. 10MB)</label>
+        <img src="<%= user.avatar %>" class="settings-avatar" id="avatarPreview" onerror="this.src='/img/default_avatar.png'">
+        <input type="file" name="avatar" class="form-input" accept="image/*" onchange="previewImage(this, 'avatarPreview')">
       </div>
+
+      <div class="form-group">
+        <label>Баннер профиля (макс. 10MB)</label>
+        <% if (user.banner) { %>
+          <div class="settings-banner-preview" id="bannerPreviewWrap">
+            <img src="<%= user.banner %>" class="settings-banner-img" id="bannerPreview" alt="Баннер">
+          </div>
+        <% } else { %>
+          <div class="settings-banner-preview settings-banner-empty" id="bannerPreviewWrap">
+            <span id="bannerPreview" class="banner-placeholder"><i class="fa-solid fa-image"></i> Нет баннера</span>
+          </div>
+        <% } %>
+        <input type="file" name="banner" class="form-input" accept="image/*" onchange="previewBanner(this)" style="margin-top:7px">
+        <div class="form-hint">Рекомендуемый размер: 860×200px</div>
+      </div>
+
       <div class="form-group">
         <label>Подпись</label>
         <textarea name="signature" class="form-textarea" rows="3" maxlength="200"><%= user.signature || '' %></textarea>
@@ -28,4 +45,27 @@
   </div>
 </div>
 <%- include('../partials/footer') %>
+<script>
+function previewImage(input, previewId) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const el = document.getElementById(previewId);
+      el.src = e.target.result;
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+function previewBanner(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const wrap = document.getElementById('bannerPreviewWrap');
+      wrap.classList.remove('settings-banner-empty');
+      wrap.innerHTML = '<img src="' + e.target.result + '" class="settings-banner-img" id="bannerPreview" alt="Баннер">';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+</script>
 </body></html>

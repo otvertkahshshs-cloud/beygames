@@ -1,17 +1,27 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
-<head><meta charset="UTF-8"><title><%= profile.username %> — Dealerhook.cc</title><link rel="stylesheet" href="/css/style.css"></head>
+<head><meta charset="UTF-8"><title><%= profile.username %> · Dealerhook.cc</title><link rel="stylesheet" href="/css/style.css"></head>
 <body>
 <%- include('../partials/header') %>
 <div class="container main-wrap">
   <div class="profile-wrap">
+
+    <!-- BANNER -->
+    <div class="profile-banner-wrap">
+      <% if (profile.banner) { %>
+        <img src="<%= profile.banner %>" class="profile-banner-img" alt="Баннер <%= profile.username %>">
+      <% } else { %>
+        <div class="profile-banner-default"></div>
+      <% } %>
+    </div>
+
     <div class="profile-card">
       <img src="<%= profile.avatar %>" class="profile-avatar" onerror="this.src='/img/default_avatar.png'">
       <div class="profile-info">
         <h2 class="profile-name"><%= profile.username %></h2>
         <div class="profile-rank"><%= profile.rank %></div>
         <div class="profile-stats">
-          <div class="pstat"><span>Постов</span><b><%= profile.postsCount %></b></div>
+          <div class="pstat"><span>Постов</span><b><%= profile.posts_count %></b></div>
           <div class="pstat"><span>Репутация</span><b><%= profile.reputation %></b></div>
           <div class="pstat"><span>На сайте с</span><b><%= new Date(profile.created_at).toLocaleDateString('ru') %></b></div>
         </div>
@@ -21,6 +31,7 @@
         <% } %>
       </div>
     </div>
+
     <div class="profile-tabs">
       <div class="ptab-section">
         <h3>Последние темы</h3>
@@ -28,7 +39,7 @@
         <% for (const t of threads) { %>
         <div class="ptab-row">
           <a href="/forum/thread/<%= t._id %>"><%= t.title %></a>
-          <span class="muted"><%= t.section_name %> · <%= new Date(t.createdAt).toLocaleDateString('ru') %></span>
+          <span class="muted"><%= t.section_name %> · <%= new Date(t.created_at).toLocaleDateString('ru') %></span>
         </div>
         <% } %>
       </div>

@@ -95,7 +95,7 @@
         <div style="display:flex;flex-wrap:wrap;gap:6px;padding:4px 0">
           <% for (const u of onlineUsers) { %>
           <a href="/user/<%= u.username %>" title="<%= u.username %>" style="display:inline-block">
-            <img src="<%= u.avatar %>" onerror="this.src='/img/default_avatar.png'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid #4caf50">
+            <img src="<%= u.avatar %>" onerror="this.src='/img/default_avatar.png'" style="width:32px;height:32px;border-radius:50%;object-fit:cover">
           </a>
           <% } %>
         </div>

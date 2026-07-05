@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { query, uuidv4 } = require('../db');
 const { getRank } = require('../utils');
-const { uploadThreadFields } = require('../cloudinary');
+const { uploadThreadFields, getFileUrl } = require('../cloudinary');
 
 function auth(req, res, next) {
     if (!req.session.user) return res.redirect('/auth/login');
@@ -78,15 +78,16 @@ router.post('/section/:id/new', auth, uploadThreadFields, async (req, res) => {
         const rawFile  = req.files && req.files['file']  ? req.files['file'][0]  : null;
         const rawImage = req.files && req.files['image'] ? req.files['image'][0] : null;
 
-        // Файлы уже сохранены на диск multer-ом, берём локальный URL
-        const finalImage = rawImage ? '/uploads/threads/' + rawImage.filename : null;
+        // Файлы сохранены multer-ом (диск или Cloudinary), берём URL
+        const finalImage = rawImage ? getFileUrl(rawImage, '/uploads/threads') : null;
 
         let attachment = null;
         if (rawFile) {
             const ext = rawFile.originalname.split('.').pop().toLowerCase();
+            const fileUrl = getFileUrl(rawFile, '/uploads/files');
             attachment = {
                 filename: rawFile.originalname,
-                path: '/uploads/files/' + rawFile.filename,
+                path: fileUrl,
                 size: rawFile.size,
                 ext,
             };
@@ -112,14 +113,15 @@ router.post('/thread/:id/reply', auth, uploadThreadFields, async (req, res) => {
         const thread = rows[0];
         const user = req.session.user;
 
-        // Файлы уже сохранены на диск multer-ом, берём локальный URL
+        // Файлы сохранены multer-ом (диск или Cloudinary), берём URL
         let attachment = null;
         const rawFile = req.files && req.files['file'] ? req.files['file'][0] : null;
         if (rawFile) {
             const ext = rawFile.originalname.split('.').pop().toLowerCase();
+            const fileUrl = getFileUrl(rawFile, '/uploads/files');
             attachment = {
                 filename: rawFile.originalname,
-                path: '/uploads/files/' + rawFile.filename,
+                path: fileUrl,
                 size: rawFile.size,
                 ext,
             };
